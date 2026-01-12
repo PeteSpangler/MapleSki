@@ -6,7 +6,6 @@ import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import Link from "expo-router/link";
-import MovingBackground from "../../components/background";
 
 export default function HomeScreen() {
   return (
@@ -19,9 +18,6 @@ export default function HomeScreen() {
         />
       }
     >
-      <ThemedView style={StyleSheet.absoluteFill}>
-        <MovingBackground />
-      </ThemedView>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
