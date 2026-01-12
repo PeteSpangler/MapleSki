@@ -5,7 +5,7 @@ export type Mountain = {
 };
 
 export const mountainArray: Mountain[] = [
-  { index: 0, name: "Sunshine", desc: "Moguls" },
+  { index: 0, name: "Grouse", desc: "Easy" },
   { index: 1, name: "Louise", desc: "Bear Central" },
   { index: 2, name: "Sun Peaks", desc: "Glades" },
   { index: 3, name: "Panorama", desc: "Moguls" },

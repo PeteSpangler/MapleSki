@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import { Bear, bearArray } from "../assets/bears/bearArray";
 import { Jerry, jerryArray } from "../assets/jerries/jerryArray";
+import { Mogul, mogulArray } from "../assets/moguls/mogulArray";
 import { Mountain, mountainArray } from "../assets/mountains/mountainArray";
 import { Tree, treeArray } from "../assets/trees/treeArray";
 
 export const defaultDownhillSpeed = 1;
-export const defaultBears = 1;
-export const defaultTrees = 1;
+export const defaultBears = 0;
+export const defaultTrees = 0;
 export const defaultJerries = 0;
-export const defaultMoguls = 0;
+export const defaultNumberOfMoguls = 0;
+export const defaultSnowDepth = 1;
 
 export enum Views {
   Menu,
@@ -26,18 +28,28 @@ type GameState = {
   currentBear: Bear;
   currentTree: Tree;
   currentJerry: Jerry;
-  currentMoguls: number;
+  currentMogul: Mogul;
   currentRoundScore: number;
+  currentSnowDepth: number;
   money: number;
+  numberOfMoguls: number;
+  numberOfBears: number;
+  numberOfTrees: number;
+  numberOfJerries: number;
 
   setCurrentView: (view: Views) => void;
   setCurrentMountain: (mountain: Mountain) => void;
   setCurrentBear: (bear: Bear) => void;
   setCurrentTree: (tree: Tree) => void;
   setCurrentJerry: (jerry: Jerry) => void;
-  setCurrentMoguls: (update: number | ((prev: number) => number)) => void;
-  setMoney: (update: number | ((prev: number) => number)) => void;
+  setCurrentMogul: (mogul: Mogul) => void;
   setCurrentRoundSore: (score: number) => void;
+  setCurrentSnowDepth: (update: number | ((prev: number) => number)) => void;
+  setMoney: (update: number | ((prev: number) => number)) => void;
+  setNumberOfMoguls: (update: number | ((prev: number) => number)) => void;
+  setNumberOfBears: (update: number | ((prev: number) => number)) => void;
+  setNumberOfTrees: (update: number | ((prev: number) => number)) => void;
+  setNumberOfJerries: (update: number | ((prev: number) => number)) => void;
   resetGame: () => void;
 };
 
@@ -45,13 +57,18 @@ export const useAppStore = create<GameState>((set) => ({
   currentBear: bearArray[0],
   currentDownhillSpeed: defaultDownhillSpeed,
   currentJerry: jerryArray[0],
-  currentMoguls: defaultMoguls,
   currentMountain: mountainArray[0],
+  currentMogul: mogulArray[0],
   currentTree: treeArray[0],
   currentRoundScore: 0,
+  currentSnowDepth: defaultSnowDepth,
   currentView: Views.Menu,
   lastView: Views.Menu,
   money: 5,
+  numberOfMoguls: defaultNumberOfMoguls,
+  numberOfBears: defaultBears,
+  numberOfTrees: defaultTrees,
+  numberOfJerries: defaultJerries,
 
   setCurrentView: (view: Views) =>
     set((state) => ({
@@ -68,10 +85,16 @@ export const useAppStore = create<GameState>((set) => ({
 
   setCurrentJerry: (jerry: Jerry) => set({ currentJerry: jerry }),
 
-  setCurrentMoguls: (update) =>
+  setCurrentMogul: (mogul: Mogul) => set({ currentMogul: mogul }),
+
+  setCurrentRoundSore(score) {
+    set({ currentRoundScore: score });
+  },
+
+  setCurrentSnowDepth: (update: number | ((prev: number) => number)) =>
     set((state) => ({
-      currentMoguls:
-        typeof update === "function" ? update(state.currentMoguls) : update,
+      currentSnowDepth:
+        typeof update === "function" ? update(state.currentSnowDepth) : update,
     })),
 
   setMoney: (update) =>
@@ -79,19 +102,45 @@ export const useAppStore = create<GameState>((set) => ({
       money: typeof update === "function" ? update(state.money) : update,
     })),
 
-  setCurrentRoundSore(score) {
-    set({ currentRoundScore: score });
-  },
+  setNumberOfBears: (update) =>
+    set((state) => ({
+      numberOfBears:
+        typeof update === "function" ? update(state.numberOfBears) : update,
+    })),
+
+  setNumberOfJerries: (update) =>
+    set((state) => ({
+      numberOfJerries:
+        typeof update === "function" ? update(state.numberOfJerries) : update,
+    })),
+
+  setNumberOfMoguls: (update) =>
+    set((state) => ({
+      numberOfMoguls:
+        typeof update === "function" ? update(state.numberOfMoguls) : update,
+    })),
+
+  setNumberOfTrees: (update) =>
+    set((state) => ({
+      numberOfTrees:
+        typeof update === "function" ? update(state.numberOfTrees) : update,
+    })),
 
   resetGame: () =>
     set(() => ({
+      currentBear: bearArray[0],
+      currentDownhillSpeed: defaultDownhillSpeed,
+      currentJerry: jerryArray[0],
+      currentMogul: mogulArray[0],
+      currentRoundScore: 0,
+      currentSnowDepth: defaultSnowDepth,
+      currentTree: treeArray[0],
       currentView: Views.Menu,
       lastView: Views.Menu,
-      currentDownhillSpeed: defaultDownhillSpeed,
-      currentBear: bearArray[0],
-      currentTree: treeArray[0],
-      currentJerry: jerryArray[0],
-      currentMoguls: defaultMoguls,
       money: 5,
+      numberOfMoguls: defaultNumberOfMoguls,
+      numberOfBears: defaultBears,
+      numberOfTrees: defaultTrees,
+      numberOfJerries: defaultJerries,
     })),
 }));
