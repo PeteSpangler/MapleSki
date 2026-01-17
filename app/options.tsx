@@ -13,6 +13,11 @@ export default function GameOptionsScreen() {
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor({}, "icon");
   const tintColor = useThemeColor({}, "tint");
+  
+  // Fallback colors for web compatibility
+  const safeTextColor = textColor || "#11181C";
+  const safeBorderColor = borderColor || "#687076";
+  const safeTintColor = tintColor || "#0a7ea4";
 
   const {
     currentBear,
@@ -57,7 +62,7 @@ export default function GameOptionsScreen() {
 
       <ThemedView style={styles.optionsContainer}>
         <TouchableOpacity
-          style={[styles.optionRow, { borderColor }]}
+          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
           onPress={handleToggleTrees}
         >
           <ThemedView style={styles.optionInfo}>
@@ -66,15 +71,15 @@ export default function GameOptionsScreen() {
               {isTreesEnabled ? currentTree.type : "No trees"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={[styles.toggleButton, { backgroundColor: isTreesEnabled ? tintColor : borderColor }]}>
-            <ThemedText style={[styles.toggleText, { color: isTreesEnabled ? "#fff" : textColor }]}>
+          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isTreesEnabled ? safeTintColor : safeBorderColor })}>
+            <ThemedText style={Object.assign({}, styles.toggleText, { color: isTreesEnabled ? "#ffffff" : safeTextColor })}>
               {isTreesEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.optionRow, { borderColor }]}
+          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
           onPress={handleToggleJerries}
         >
           <ThemedView style={styles.optionInfo}>
@@ -83,15 +88,15 @@ export default function GameOptionsScreen() {
               {isJerriesEnabled ? currentJerry.type : "No skiers"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={[styles.toggleButton, { backgroundColor: isJerriesEnabled ? tintColor : borderColor }]}>
-            <ThemedText style={[styles.toggleText, { color: isJerriesEnabled ? "#fff" : textColor }]}>
+          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isJerriesEnabled ? safeTintColor : safeBorderColor })}>
+            <ThemedText style={Object.assign({}, styles.toggleText, { color: isJerriesEnabled ? "#ffffff" : safeTextColor })}>
               {isJerriesEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.optionRow, { borderColor }]}
+          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
           onPress={handleToggleMoguls}
         >
           <ThemedView style={styles.optionInfo}>
@@ -100,15 +105,15 @@ export default function GameOptionsScreen() {
               {isMogulsEnabled ? currentMogul.type : "No moguls"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={[styles.toggleButton, { backgroundColor: isMogulsEnabled ? tintColor : borderColor }]}>
-            <ThemedText style={[styles.toggleText, { color: isMogulsEnabled ? "#fff" : textColor }]}>
+          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isMogulsEnabled ? safeTintColor : safeBorderColor })}>
+            <ThemedText style={Object.assign({}, styles.toggleText, { color: isMogulsEnabled ? "#ffffff" : safeTextColor })}>
               {isMogulsEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.optionRow, { borderColor }]}
+          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
           onPress={handleToggleBears}
         >
           <ThemedView style={styles.optionInfo}>
@@ -117,8 +122,8 @@ export default function GameOptionsScreen() {
               {isBearsEnabled ? currentBear.type : "No bears"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={[styles.toggleButton, { backgroundColor: isBearsEnabled ? tintColor : borderColor }]}>
-            <ThemedText style={[styles.toggleText, { color: isBearsEnabled ? "#fff" : textColor }]}>
+          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isBearsEnabled ? safeTintColor : safeBorderColor })}>
+            <ThemedText style={Object.assign({}, styles.toggleText, { color: isBearsEnabled ? "#ffffff" : safeTextColor })}>
               {isBearsEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
@@ -144,7 +149,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   optionsContainer: {
-    gap: 20,
+    marginVertical: 10,
   },
   optionRow: {
     flexDirection: "row",
@@ -153,6 +158,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    marginBottom: 20,
   },
   optionInfo: {
     flex: 1,

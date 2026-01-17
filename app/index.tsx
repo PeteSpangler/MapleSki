@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { Alert, StyleSheet, TouchableOpacity, BackHandler, Modal } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, BackHandler, Modal, Platform } from "react-native";
 import { useState } from "react";
 import Link from "expo-router/link";
 
@@ -13,6 +13,11 @@ export default function HomeScreen() {
   const backgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
   const tintColor = useThemeColor({}, "tint");
+  
+  // Fallback colors for web compatibility
+  const safeBackgroundColor = backgroundColor || "#fff";
+  const safeTextColor = textColor || "#11181C";
+  const safeTintColor = tintColor || "#0a7ea4";
 
   const handleStartGame = () => {
     setShowGameModal(true);
@@ -56,38 +61,35 @@ export default function HomeScreen() {
           </ThemedView>
 
           <ThemedView style={styles.menuContainer}>
-            <TouchableOpacity
-              style={[styles.menuButton, { backgroundColor: tintColor }]}
-              onPress={handleStartGame}
-            >
-              <ThemedText style={[styles.menuButtonText, { color: "#fff" }]}>
-                Start Game
-              </ThemedText>
-            </TouchableOpacity>
+<TouchableOpacity
+            style={Object.assign({}, styles.menuButton, { backgroundColor: safeTintColor })}
+            onPress={handleStartGame}
+          >
+            <ThemedText style={Object.assign({}, styles.menuButtonText, { color: "#ffffff" })}>
+              Start Game
+            </ThemedText>
+          </TouchableOpacity>
 
             <Link href="/options" asChild>
               <TouchableOpacity
-                style={[
-                  styles.menuButton,
-                  { backgroundColor: textColor, opacity: 0.8 },
-                ]}
+                style={Object.assign({}, styles.menuButton, { backgroundColor: safeTextColor, opacity: 0.8 })}
               >
                 <ThemedText
-                  style={[styles.menuButtonText, { color: backgroundColor }]}
+                  style={Object.assign({}, styles.menuButtonText, { color: safeBackgroundColor })}
                 >
                   Game Options
                 </ThemedText>
               </TouchableOpacity>
             </Link>
 
-            <TouchableOpacity
-              style={[styles.menuButton, styles.exitButton]}
-              onPress={handleExit}
-            >
-              <ThemedText style={[styles.menuButtonText, { color: "#fff" }]}>
-                Exit
-              </ThemedText>
-            </TouchableOpacity>
+<TouchableOpacity
+            style={Object.assign({}, styles.menuButton, styles.exitButton)}
+            onPress={handleExit}
+          >
+            <ThemedText style={Object.assign({}, styles.menuButtonText, { color: "#ffffff" })}>
+              Exit
+            </ThemedText>
+          </TouchableOpacity>
           </ThemedView>
         </ThemedView>
       </ParallaxScrollView>
@@ -99,7 +101,7 @@ export default function HomeScreen() {
         onRequestClose={handleCloseModal}
       >
         <ThemedView style={styles.modalOverlay}>
-          <ThemedView style={[styles.modalContent, { backgroundColor }]}>
+          <ThemedView style={Object.assign({}, styles.modalContent, { backgroundColor: safeBackgroundColor })}>
             <ThemedText type="title" style={styles.modalTitle}>
               Game Coming Soon!
             </ThemedText>
@@ -107,10 +109,10 @@ export default function HomeScreen() {
               The skiing game is currently under development. Check back later for updates!
             </ThemedText>
             <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: tintColor }]}
+              style={Object.assign({}, styles.modalButton, { backgroundColor: safeTintColor })}
               onPress={handleCloseModal}
             >
-              <ThemedText style={[styles.modalButtonText, { color: "#fff" }]}>
+              <ThemedText style={Object.assign({}, styles.modalButtonText, { color: "#ffffff" })}>
                 OK
               </ThemedText>
             </TouchableOpacity>
@@ -140,7 +142,6 @@ const styles = StyleSheet.create({
   menuContainer: {
     width: "100%",
     maxWidth: 300,
-    gap: 20,
   },
   menuButton: {
     padding: 20,
@@ -148,14 +149,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 60,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: "0px 2px 3.84px rgba(0, 0, 0, 0.25)",
+      },
+    }),
   },
   menuButtonText: {
     fontSize: 18,
@@ -184,14 +196,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     maxWidth: 300,
     width: "100%",
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...Platform.select({
+      ios: {
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 10,
+      },
+      web: {
+        boxShadow: "0px 2px 3.84px rgba(0, 0, 0, 0.25)",
+      },
+    }),
   },
   modalTitle: {
     marginBottom: 15,
