@@ -54,12 +54,12 @@ type GameState = {
 };
 
 export const useAppStore = create<GameState>((set) => ({
-  currentBear: bearArray[0],
+  currentBear: bearArray[1],
   currentDownhillSpeed: defaultDownhillSpeed,
-  currentJerry: jerryArray[0],
+  currentJerry: jerryArray[1],
   currentMountain: mountainArray[0],
-  currentMogul: mogulArray[0],
-  currentTree: treeArray[0],
+  currentMogul: mogulArray[1],
+  currentTree: treeArray[1],
   currentRoundScore: 0,
   currentSnowDepth: defaultSnowDepth,
   currentView: Views.Menu,
@@ -128,13 +128,13 @@ export const useAppStore = create<GameState>((set) => ({
 
   resetGame: () =>
     set(() => ({
-      currentBear: bearArray[0],
+      currentBear: bearArray[1],
       currentDownhillSpeed: defaultDownhillSpeed,
-      currentJerry: jerryArray[0],
-      currentMogul: mogulArray[0],
+      currentJerry: jerryArray[1],
+      currentMogul: mogulArray[1],
       currentRoundScore: 0,
       currentSnowDepth: defaultSnowDepth,
-      currentTree: treeArray[0],
+      currentTree: treeArray[1],
       currentView: Views.Menu,
       lastView: Views.Menu,
       money: 5,
