@@ -1,27 +1,29 @@
 import { Image } from "expo-image";
-import { Alert, StyleSheet, TouchableOpacity, BackHandler, Modal, Platform } from "react-native";
-import { useState } from "react";
 import Link from "expo-router/link";
+import { useState } from "react";
+import {
+  Alert,
+  BackHandler,
+  Modal,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import ParallaxScrollView from "../components/parallax-scroll-view";
+import { ThemedText } from "../components/themed-text";
+import { ThemedView } from "../components/themed-view";
+import { useThemeColor } from "../hooks/use-theme-color";
 
 export default function HomeScreen() {
   const [showGameModal, setShowGameModal] = useState(false);
   const backgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
   const tintColor = useThemeColor({}, "tint");
-  
-  // Fallback colors for web compatibility
+
   const safeBackgroundColor = backgroundColor || "#fff";
   const safeTextColor = textColor || "#11181C";
   const safeTintColor = tintColor || "#0a7ea4";
-
-  const handleStartGame = () => {
-    setShowGameModal(true);
-  };
 
   const handleCloseModal = () => {
     setShowGameModal(false);
@@ -61,35 +63,47 @@ export default function HomeScreen() {
           </ThemedView>
 
           <ThemedView style={styles.menuContainer}>
-<TouchableOpacity
-            style={Object.assign({}, styles.menuButton, { backgroundColor: safeTintColor })}
-            onPress={handleStartGame}
-          >
-            <ThemedText style={Object.assign({}, styles.menuButtonText, { color: "#ffffff" })}>
-              Start Game
-            </ThemedText>
-          </TouchableOpacity>
+            <Link href="/gameScreen" asChild>
+              <TouchableOpacity
+                style={[styles.menuButton, { backgroundColor: safeTintColor }]}
+              >
+                <ThemedText
+                  style={[styles.menuButtonText, { color: "#ffffff" }]}
+                >
+                  Start Game
+                </ThemedText>
+              </TouchableOpacity>
+            </Link>
 
             <Link href="/options" asChild>
               <TouchableOpacity
-                style={Object.assign({}, styles.menuButton, { backgroundColor: safeTextColor, opacity: 0.8 })}
+                style={Object.assign({}, styles.menuButton, {
+                  backgroundColor: safeTextColor,
+                  opacity: 0.8,
+                })}
               >
                 <ThemedText
-                  style={Object.assign({}, styles.menuButtonText, { color: safeBackgroundColor })}
+                  style={Object.assign({}, styles.menuButtonText, {
+                    color: safeBackgroundColor,
+                  })}
                 >
                   Game Options
                 </ThemedText>
               </TouchableOpacity>
             </Link>
 
-<TouchableOpacity
-            style={Object.assign({}, styles.menuButton, styles.exitButton)}
-            onPress={handleExit}
-          >
-            <ThemedText style={Object.assign({}, styles.menuButtonText, { color: "#ffffff" })}>
-              Exit
-            </ThemedText>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={Object.assign({}, styles.menuButton, styles.exitButton)}
+              onPress={handleExit}
+            >
+              <ThemedText
+                style={Object.assign({}, styles.menuButtonText, {
+                  color: "#ffffff",
+                })}
+              >
+                Exit
+              </ThemedText>
+            </TouchableOpacity>
           </ThemedView>
         </ThemedView>
       </ParallaxScrollView>
@@ -101,18 +115,29 @@ export default function HomeScreen() {
         onRequestClose={handleCloseModal}
       >
         <ThemedView style={styles.modalOverlay}>
-          <ThemedView style={Object.assign({}, styles.modalContent, { backgroundColor: safeBackgroundColor })}>
+          <ThemedView
+            style={Object.assign({}, styles.modalContent, {
+              backgroundColor: safeBackgroundColor,
+            })}
+          >
             <ThemedText type="title" style={styles.modalTitle}>
               Game Coming Soon!
             </ThemedText>
             <ThemedText style={styles.modalMessage}>
-              The skiing game is currently under development. Check back later for updates!
+              The skiing game is currently under development. Check back later
+              for updates!
             </ThemedText>
             <TouchableOpacity
-              style={Object.assign({}, styles.modalButton, { backgroundColor: safeTintColor })}
+              style={Object.assign({}, styles.modalButton, {
+                backgroundColor: safeTintColor,
+              })}
               onPress={handleCloseModal}
             >
-              <ThemedText style={Object.assign({}, styles.modalButtonText, { color: "#ffffff" })}>
+              <ThemedText
+                style={Object.assign({}, styles.modalButtonText, {
+                  color: "#ffffff",
+                })}
+              >
                 OK
               </ThemedText>
             </TouchableOpacity>

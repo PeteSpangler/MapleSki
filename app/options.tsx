@@ -1,20 +1,19 @@
 import { StyleSheet, TouchableOpacity } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import { useAppStore } from "@/hooks/game-state";
 import { bearArray } from "@/assets/bears/bearArray";
-import { treeArray } from "@/assets/trees/treeArray";
 import { jerryArray } from "@/assets/jerries/jerryArray";
 import { mogulArray } from "@/assets/moguls/mogulArray";
+import { treeArray } from "@/assets/trees/treeArray";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useAppStore } from "@/hooks/game-state";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function GameOptionsScreen() {
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor({}, "icon");
   const tintColor = useThemeColor({}, "tint");
-  
-  // Fallback colors for web compatibility
+
   const safeTextColor = textColor || "#11181C";
   const safeBorderColor = borderColor || "#687076";
   const safeTintColor = tintColor || "#0a7ea4";
@@ -62,7 +61,9 @@ export default function GameOptionsScreen() {
 
       <ThemedView style={styles.optionsContainer}>
         <TouchableOpacity
-          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
+          style={Object.assign({}, styles.optionRow, {
+            borderColor: safeBorderColor,
+          })}
           onPress={handleToggleTrees}
         >
           <ThemedView style={styles.optionInfo}>
@@ -71,15 +72,25 @@ export default function GameOptionsScreen() {
               {isTreesEnabled ? currentTree.type : "No trees"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isTreesEnabled ? safeTintColor : safeBorderColor })}>
-            <ThemedText style={Object.assign({}, styles.toggleText, { color: isTreesEnabled ? "#ffffff" : safeTextColor })}>
+          <ThemedView
+            style={Object.assign({}, styles.toggleButton, {
+              backgroundColor: isTreesEnabled ? safeTintColor : safeBorderColor,
+            })}
+          >
+            <ThemedText
+              style={Object.assign({}, styles.toggleText, {
+                color: isTreesEnabled ? "#ffffff" : safeTextColor,
+              })}
+            >
               {isTreesEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
+          style={Object.assign({}, styles.optionRow, {
+            borderColor: safeBorderColor,
+          })}
           onPress={handleToggleJerries}
         >
           <ThemedView style={styles.optionInfo}>
@@ -88,15 +99,27 @@ export default function GameOptionsScreen() {
               {isJerriesEnabled ? currentJerry.type : "No skiers"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isJerriesEnabled ? safeTintColor : safeBorderColor })}>
-            <ThemedText style={Object.assign({}, styles.toggleText, { color: isJerriesEnabled ? "#ffffff" : safeTextColor })}>
+          <ThemedView
+            style={Object.assign({}, styles.toggleButton, {
+              backgroundColor: isJerriesEnabled
+                ? safeTintColor
+                : safeBorderColor,
+            })}
+          >
+            <ThemedText
+              style={Object.assign({}, styles.toggleText, {
+                color: isJerriesEnabled ? "#ffffff" : safeTextColor,
+              })}
+            >
               {isJerriesEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
+          style={Object.assign({}, styles.optionRow, {
+            borderColor: safeBorderColor,
+          })}
           onPress={handleToggleMoguls}
         >
           <ThemedView style={styles.optionInfo}>
@@ -105,15 +128,27 @@ export default function GameOptionsScreen() {
               {isMogulsEnabled ? currentMogul.type : "No moguls"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isMogulsEnabled ? safeTintColor : safeBorderColor })}>
-            <ThemedText style={Object.assign({}, styles.toggleText, { color: isMogulsEnabled ? "#ffffff" : safeTextColor })}>
+          <ThemedView
+            style={Object.assign({}, styles.toggleButton, {
+              backgroundColor: isMogulsEnabled
+                ? safeTintColor
+                : safeBorderColor,
+            })}
+          >
+            <ThemedText
+              style={Object.assign({}, styles.toggleText, {
+                color: isMogulsEnabled ? "#ffffff" : safeTextColor,
+              })}
+            >
               {isMogulsEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={Object.assign({}, styles.optionRow, { borderColor: safeBorderColor })}
+          style={Object.assign({}, styles.optionRow, {
+            borderColor: safeBorderColor,
+          })}
           onPress={handleToggleBears}
         >
           <ThemedView style={styles.optionInfo}>
@@ -122,8 +157,16 @@ export default function GameOptionsScreen() {
               {isBearsEnabled ? currentBear.type : "No bears"}
             </ThemedText>
           </ThemedView>
-          <ThemedView style={Object.assign({}, styles.toggleButton, { backgroundColor: isBearsEnabled ? safeTintColor : safeBorderColor })}>
-            <ThemedText style={Object.assign({}, styles.toggleText, { color: isBearsEnabled ? "#ffffff" : safeTextColor })}>
+          <ThemedView
+            style={Object.assign({}, styles.toggleButton, {
+              backgroundColor: isBearsEnabled ? safeTintColor : safeBorderColor,
+            })}
+          >
+            <ThemedText
+              style={Object.assign({}, styles.toggleText, {
+                color: isBearsEnabled ? "#ffffff" : safeTextColor,
+              })}
+            >
               {isBearsEnabled ? "ON" : "OFF"}
             </ThemedText>
           </ThemedView>

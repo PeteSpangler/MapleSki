@@ -9,3 +9,5 @@ export const jerryArray: Jerry[] = [
   { index: 2, type: "Bob" },
   { index: 3, type: "Chad" },
 ];
+
+export const skierEmoji = "⛷️";
