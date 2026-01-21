@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import {
   OBSTACLE_SIZE,
   Obstacle,
@@ -9,14 +9,16 @@ import {
   SKIER_SIZE,
 } from "../game/types";
 import { useAppStore } from "../hooks/game-state";
-import { useGameControls, useObstacleSpawner } from "./hooks";
+import { useGameControls, useObstacleSpawner, useMountainSelection } from "./hooks";
 import { gameStyles } from "./styles";
+import { mountainArray } from "../assets/mountains/mountainArray";
 
 export default function GameScreen() {
-  const { currentTree, currentJerry, currentMogul, currentBear } =
+  const { numberOfTrees, numberOfJerries, numberOfMoguls, numberOfBears } =
     useAppStore();
 
   const [gameStarted, setGameStarted] = useState(false);
+  const [showMountainModal, setShowMountainModal] = useState(false);
   const [score, setScore] = useState(0);
   const skierXRef = useRef(
     new Animated.Value(SCREEN_WIDTH / 2 - SKIER_SIZE / 2),
@@ -28,15 +30,35 @@ export default function GameScreen() {
   });
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [gameSpeed, setGameSpeed] = useState(2);
+  const [spawnedCounts, setSpawnedCounts] = useState({ trees: 0, jerries: 0, moguls: 0, bears: 0 });
 
   const gameLoopRef = useRef<any>(null);
   const obstacleSpawnRef = useRef<any>(null);
   const scoreRef = useRef(0);
 
   const { moveSkierLeft, moveSkierRight } = useGameControls(gameStarted);
-  const { spawnObstacle } = useObstacleSpawner(gameStarted);
+  const { spawnObstacle } = useObstacleSpawner(
+    gameStarted,
+    numberOfTrees > 0,
+    numberOfJerries > 0,
+    numberOfMoguls > 0,
+    numberOfBears > 0,
+    spawnedCounts,
+    numberOfTrees,
+    numberOfJerries,
+    numberOfMoguls,
+    numberOfBears,
+  );
+  const { selectMountain } = useMountainSelection();
 
   const startGame = useCallback(() => {
+    setShowMountainModal(true);
+  }, []);
+
+  const handleMountainSelect = useCallback((mountain: typeof mountainArray[0]) => {
+    selectMountain(mountain);
+    setSpawnedCounts({ trees: 0, jerries: 0, moguls: 0, bears: 0 });
+    setShowMountainModal(false);
     setGameStarted(true);
     setScore(0);
     scoreRef.current = 0;
@@ -46,7 +68,7 @@ export default function GameScreen() {
     });
     setObstacles([]);
     setGameSpeed(2);
-  }, []);
+  }, [selectMountain]);
 
   const stopGame = useCallback(() => {
     setGameStarted(false);
@@ -100,11 +122,16 @@ export default function GameScreen() {
         });
 
         setGameSpeed((prev) => Math.min(prev + 0.02, 10));
-      }, 16); // ~60 FPS
+      }, 16);
 
       obstacleSpawnRef.current = setInterval(() => {
         const newObstacle = spawnObstacle();
         if (newObstacle) {
+          setSpawnedCounts((prev) => ({
+            ...prev,
+            [newObstacle.type === "tree" ? "trees" : newObstacle.type === "jerry" ? "jerries" : newObstacle.type === "mogul" ? "moguls" : "bears"]:
+              prev[newObstacle.type === "tree" ? "trees" : newObstacle.type === "jerry" ? "jerries" : newObstacle.type === "mogul" ? "moguls" : "bears"] + 1,
+          }));
           setObstacles((prev) => [...prev, newObstacle]);
         }
       }, 1500);
@@ -114,7 +141,7 @@ export default function GameScreen() {
         if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
       };
     }
-  }, [gameStarted, gameSpeed, spawnObstacle, skierXRef, skierYRef]);
+  }, [gameStarted, gameSpeed, spawnObstacle, skierXRef, skierYRef, skierPosition.y]);
 
   return (
     <View style={gameStyles.container}>
@@ -202,6 +229,44 @@ export default function GameScreen() {
           Use touch controls to move left and right
         </Text>
       </View>
+
+      <Modal
+        visible={showMountainModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowMountainModal(false)}
+      >
+        <View style={gameStyles.modalOverlay}>
+          <View style={gameStyles.modalContent}>
+            <Text style={gameStyles.modalTitle}>Select Mountain</Text>
+            <ScrollView style={gameStyles.mountainList}>
+              {mountainArray.map((mountain) => (
+                <TouchableOpacity
+                  key={mountain.index}
+                  style={gameStyles.mountainItem}
+                  onPress={() => handleMountainSelect(mountain)}
+                >
+                  <View style={gameStyles.mountainInfo}>
+                    <Text style={gameStyles.mountainName}>{mountain.name}</Text>
+                    <Text style={gameStyles.mountainDesc}>{mountain.desc}</Text>
+                    <View style={gameStyles.obstaclePreview}>
+                      <Text style={gameStyles.obstacleText}>
+                        🌲 {mountain.trees} | 🎿 {mountain.jerries} | ⛰️ {mountain.moguls} | 🐻 {mountain.bears}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={gameStyles.cancelButton}
+              onPress={() => setShowMountainModal(false)}
+            >
+              <Text style={gameStyles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

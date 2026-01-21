@@ -13,7 +13,7 @@ import { useScreenDimensions } from "../constants/screen-size";
 export default function MovingBackground() {
   const screenDims = useScreenDimensions();
   const translateX = useSharedValue(0);
-  const image = useImage(require("@/assets/images/skibum.png"));
+  const image = useImage(require("../assets/images/skibum.png"));
 
   useEffect(() => {
     translateX.value = withRepeat(
@@ -23,6 +23,7 @@ export default function MovingBackground() {
       }),
       -1,
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenDims.width]);
 
   const animatedTransform = useDerivedValue(() => [

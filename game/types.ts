@@ -17,3 +17,10 @@ export interface Position {
   x: number;
   y: number;
 }
+
+export interface SpawnedCounts {
+  trees: number;
+  jerries: number;
+  moguls: number;
+  bears: number;
+}

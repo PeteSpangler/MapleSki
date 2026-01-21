@@ -5,7 +5,7 @@ import { Colors } from "../../constants/theme";
 import { useColorScheme } from "../../hooks/use-color-scheme";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
-import { IconSymbol } from "../ui/icon-symbol";
+import { IconSymbol } from "./icon-symbol";
 
 export function Collapsible({
   children,

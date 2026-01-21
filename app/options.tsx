@@ -1,13 +1,13 @@
 import { StyleSheet, TouchableOpacity } from "react-native";
 
-import { bearArray } from "@/assets/bears/bearArray";
-import { jerryArray } from "@/assets/jerries/jerryArray";
-import { mogulArray } from "@/assets/moguls/mogulArray";
-import { treeArray } from "@/assets/trees/treeArray";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { useAppStore } from "@/hooks/game-state";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { bearArray } from "../assets/bears/bearArray";
+import { jerryArray } from "../assets/jerries/jerryArray";
+import { mogulArray } from "../assets/moguls/mogulArray";
+import { treeArray } from "../assets/trees/treeArray";
+import { ThemedText } from "../components/themed-text";
+import { ThemedView } from "../components/themed-view";
+import { useAppStore } from "../hooks/game-state";
+import { useThemeColor } from "../hooks/use-theme-color";
 
 export default function GameOptionsScreen() {
   const textColor = useThemeColor({}, "text");
