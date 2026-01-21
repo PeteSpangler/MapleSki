@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MapleSki",
-    "slug": "MapleSki",
+    "slug": "mapleski",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b8623c78-da42-4676-8754-b15e88b30f95"
+      }
+    },
+    "owner": "spangcouver"
   }
 }

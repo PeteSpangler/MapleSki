@@ -1,12 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
+  Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { mountainArray } from "../assets/mountains/mountainArray";
+import { treeArray } from "../assets/trees/treeArray";
+import { jerryArray } from "../assets/jerries/jerryArray";
+import { mogulArray } from "../assets/moguls/mogulArray";
+import { bearArray } from "../assets/bears/bearArray";
 import { useAppStore } from "../hooks/game-state";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -28,10 +35,11 @@ interface Position {
 }
 
 export default function GameScreen() {
-  const { currentTree, currentJerry, currentMogul, currentBear } =
+  const { setCurrentTree, setCurrentJerry, setCurrentMogul, setCurrentBear, setNumberOfTrees, setNumberOfJerries, setNumberOfMoguls, setNumberOfBears, numberOfTrees, numberOfJerries, numberOfMoguls, numberOfBears } =
     useAppStore();
 
   const [gameStarted, setGameStarted] = useState(false);
+  const [showMountainModal, setShowMountainModal] = useState(false);
   const [score, setScore] = useState(0);
   const [skierPosition, setSkierPosition] = useState<Position>({
     x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2,
@@ -39,17 +47,32 @@ export default function GameScreen() {
   });
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [gameSpeed, setGameSpeed] = useState(2);
+  const [spawnedCounts, setSpawnedCounts] = useState({ trees: 0, jerries: 0, moguls: 0, bears: 0 });
 
   const gameLoopRef = useRef<any>(null);
   const obstacleSpawnRef = useRef<any>(null);
   const scoreRef = useRef(0);
 
-  const shouldSpawnTrees = currentTree.index !== 0;
-  const shouldSpawnJerries = currentJerry.index !== 0;
-  const shouldSpawnMoguls = currentMogul.index !== 0;
-  const shouldSpawnBears = currentBear.index !== 0;
+  const shouldSpawnTrees = numberOfTrees > 0 && spawnedCounts.trees < numberOfTrees;
+  const shouldSpawnJerries = numberOfJerries > 0 && spawnedCounts.jerries < numberOfJerries;
+  const shouldSpawnMoguls = numberOfMoguls > 0 && spawnedCounts.moguls < numberOfMoguls;
+  const shouldSpawnBears = numberOfBears > 0 && spawnedCounts.bears < numberOfBears;
 
   const startGame = useCallback(() => {
+    setShowMountainModal(true);
+  }, []);
+
+  const selectMountain = useCallback((mountain: typeof mountainArray[0]) => {
+    setCurrentTree(mountain.trees > 0 ? treeArray[1] : treeArray[0]);
+    setCurrentJerry(mountain.jerries > 0 ? jerryArray[1] : jerryArray[0]);
+    setCurrentMogul(mountain.moguls > 0 ? mogulArray[1] : mogulArray[0]);
+    setCurrentBear(mountain.bears > 0 ? bearArray[1] : bearArray[0]);
+    setNumberOfTrees(mountain.trees);
+    setNumberOfJerries(mountain.jerries);
+    setNumberOfMoguls(mountain.moguls);
+    setNumberOfBears(mountain.bears);
+    setSpawnedCounts({ trees: 0, jerries: 0, moguls: 0, bears: 0 });
+    setShowMountainModal(false);
     setGameStarted(true);
     setScore(0);
     scoreRef.current = 0;
@@ -59,7 +82,7 @@ export default function GameScreen() {
     });
     setObstacles([]);
     setGameSpeed(2);
-  }, []);
+  }, [setCurrentTree, setCurrentJerry, setCurrentMogul, setCurrentBear, setNumberOfTrees, setNumberOfJerries, setNumberOfMoguls, setNumberOfBears]);
 
   const stopGame = useCallback(() => {
     setGameStarted(false);
@@ -108,6 +131,11 @@ export default function GameScreen() {
       passed: false,
     };
 
+    setSpawnedCounts((prev) => ({
+      ...prev,
+      [type === "tree" ? "trees" : type === "jerry" ? "jerries" : type === "mogul" ? "moguls" : "bears"]:
+        prev[type === "tree" ? "trees" : type === "jerry" ? "jerries" : type === "mogul" ? "moguls" : "bears"] + 1,
+    }));
     setObstacles((prev) => [...prev, newObstacle]);
   }, [
     gameStarted,
@@ -229,6 +257,44 @@ export default function GameScreen() {
           Use touch controls to move left and right
         </Text>
       </View>
+
+      <Modal
+        visible={showMountainModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowMountainModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Mountain</Text>
+            <ScrollView style={styles.mountainList}>
+              {mountainArray.map((mountain) => (
+                <TouchableOpacity
+                  key={mountain.index}
+                  style={styles.mountainItem}
+                  onPress={() => selectMountain(mountain)}
+                >
+                  <View style={styles.mountainInfo}>
+                    <Text style={styles.mountainName}>{mountain.name}</Text>
+                    <Text style={styles.mountainDesc}>{mountain.desc}</Text>
+                    <View style={styles.obstaclePreview}>
+                      <Text style={styles.obstacleText}>
+                        🌲 {mountain.trees} | 🎿 {mountain.jerries} | ⛰️ {mountain.moguls} | 🐻 {mountain.bears}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowMountainModal(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -341,5 +407,61 @@ const styles = StyleSheet.create({
   instructionText: {
     fontSize: 14,
     color: "#666",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    width: "100%",
+    maxWidth: 400,
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  mountainList: {
+    maxHeight: 350,
+  },
+  mountainItem: {
+    backgroundColor: "#f5f5f5",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  mountainInfo: {
+    gap: 5,
+  },
+  mountainName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  mountainDesc: {
+    fontSize: 14,
+    color: "#666",
+  },
+  obstaclePreview: {
+    marginTop: 5,
+  },
+  obstacleText: {
+    fontSize: 12,
+    color: "#444",
+  },
+  cancelButton: {
+    backgroundColor: "#dc3545",
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 15,
   },
 });
