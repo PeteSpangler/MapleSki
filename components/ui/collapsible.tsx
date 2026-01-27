@@ -26,7 +26,7 @@ export function Collapsible({
           size={18}
           weight="medium"
           color={theme === "light" ? Colors.light.icon : Colors.dark.icon}
-          style={{ transform: [{ rotate: isOpen ? "90deg" : "0deg" }] }}
+          style={{ transform: [{ rotate: isOpen ? "90deg" : "0deg" }] as any }}
         />
 
         <ThemedText type="defaultSemiBold">{title}</ThemedText>

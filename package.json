@@ -1,6 +1,7 @@
 {
   "name": "mapleski",
   "main": "expo-router/entry",
+  "browser": "index.web",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",

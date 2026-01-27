@@ -1,10 +1,8 @@
 import { Image } from "expo-image";
 import Link from "expo-router/link";
-import { useState } from "react";
 import {
   Alert,
   BackHandler,
-  Modal,
   Platform,
   StyleSheet,
   TouchableOpacity,
@@ -16,7 +14,6 @@ import { ThemedView } from "../components/themed-view";
 import { useThemeColor } from "../hooks/use-theme-color";
 
 export default function HomeScreen() {
-  const [showGameModal, setShowGameModal] = useState(false);
   const backgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
   const tintColor = useThemeColor({}, "tint");
@@ -24,10 +21,6 @@ export default function HomeScreen() {
   const safeBackgroundColor = backgroundColor || "#fff";
   const safeTextColor = textColor || "#11181C";
   const safeTintColor = tintColor || "#0a7ea4";
-
-  const handleCloseModal = () => {
-    setShowGameModal(false);
-  };
 
   const handleExit = () => {
     Alert.alert("Exit Game", "Are you sure you want to exit MapleSki?", [
@@ -77,15 +70,10 @@ export default function HomeScreen() {
 
             <Link href="/options" asChild>
               <TouchableOpacity
-                style={Object.assign({}, styles.menuButton, {
-                  backgroundColor: safeTextColor,
-                  opacity: 0.8,
-                })}
+                style={[styles.menuButton, { backgroundColor: safeTextColor, opacity: 0.8 }]}
               >
                 <ThemedText
-                  style={Object.assign({}, styles.menuButtonText, {
-                    color: safeBackgroundColor,
-                  })}
+                  style={[styles.menuButtonText, { color: safeBackgroundColor }]}
                 >
                   Game Options
                 </ThemedText>
@@ -93,13 +81,11 @@ export default function HomeScreen() {
             </Link>
 
             <TouchableOpacity
-              style={Object.assign({}, styles.menuButton, styles.exitButton)}
+              style={[styles.menuButton, styles.exitButton]}
               onPress={handleExit}
             >
               <ThemedText
-                style={Object.assign({}, styles.menuButtonText, {
-                  color: "#ffffff",
-                })}
+                style={[styles.menuButtonText, { color: "#ffffff" }]}
               >
                 Exit
               </ThemedText>
@@ -107,43 +93,6 @@ export default function HomeScreen() {
           </ThemedView>
         </ThemedView>
       </ParallaxScrollView>
-
-      <Modal
-        visible={showGameModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCloseModal}
-      >
-        <ThemedView style={styles.modalOverlay}>
-          <ThemedView
-            style={Object.assign({}, styles.modalContent, {
-              backgroundColor: safeBackgroundColor,
-            })}
-          >
-            <ThemedText type="title" style={styles.modalTitle}>
-              Game Coming Soon!
-            </ThemedText>
-            <ThemedText style={styles.modalMessage}>
-              The skiing game is currently under development. Check back later
-              for updates!
-            </ThemedText>
-            <TouchableOpacity
-              style={Object.assign({}, styles.modalButton, {
-                backgroundColor: safeTintColor,
-              })}
-              onPress={handleCloseModal}
-            >
-              <ThemedText
-                style={Object.assign({}, styles.modalButtonText, {
-                  color: "#ffffff",
-                })}
-              >
-                OK
-              </ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        </ThemedView>
-      </Modal>
     </>
   );
 }
@@ -207,56 +156,5 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     position: "absolute",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-  },
-  modalContent: {
-    borderRadius: 20,
-    padding: 30,
-    alignItems: "center",
-    maxWidth: 300,
-    width: "100%",
-    ...Platform.select({
-      ios: {
-        elevation: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 10,
-      },
-      web: {
-        boxShadow: "0px 2px 3.84px rgba(0, 0, 0, 0.25)",
-      },
-    }),
-  },
-  modalTitle: {
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  modalMessage: {
-    textAlign: "center",
-    marginBottom: 25,
-    lineHeight: 20,
-  },
-  modalButton: {
-    padding: 15,
-    borderRadius: 10,
-    minWidth: 100,
-    alignItems: "center",
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

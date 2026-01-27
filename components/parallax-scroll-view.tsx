@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactElement } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedRef,
@@ -35,11 +35,18 @@ export default function ParallaxScrollView({
     );
     const scale = interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]);
 
+    // Disable transforms for web to avoid CSS errors
+    if (Platform.OS === 'web') {
+      return {
+        transform: { translateY: translateY as any, scale: scale as any } as any,
+      };
+    }
+    
     return {
       transform: [
-        { translateY: translateY } as any,
-        { scale: scale } as any,
-      ],
+        { translateY: translateY as any },
+        { scale: scale as any },
+      ] as any,
     };
   });
 
