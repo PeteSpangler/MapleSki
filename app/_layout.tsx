@@ -3,17 +3,17 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '../hooks/use-color-scheme';
+import { useColorScheme } from 'react-native';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() as 'light' | 'dark';
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="options" options={{ headerShown: true, title: 'Game Options' }} />
         <Stack.Screen name="gameScreen" options={{ headerShown: false }} />
+        <Stack.Screen name="defeatScreen" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

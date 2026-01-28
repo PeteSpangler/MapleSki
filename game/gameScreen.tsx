@@ -1,159 +1,226 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-
-import { mountainArray } from "../assets/mountains/mountainArray";
-import {
-  OBSTACLE_SIZE,
-  Obstacle,
-  Position,
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
-  SKIER_SIZE,
-} from "../game/types";
+import React, { useEffect, useRef, useCallback } from "react";
+import { View, Text, TouchableOpacity, Alert, PanResponder } from "react-native";
 import { useAppStore } from "../hooks/game-state";
-import {
-  useGameControls,
-  useMountainSelection,
-  useObstacleSpawner,
-} from "./hooks";
 import { gameStyles } from "./styles";
+import { skierEmoji } from "../assets/jerries/jerryArray";
+import { SCREEN_WIDTH, SCREEN_HEIGHT, SKIER_SIZE, OBSTACLE_SIZE } from "./types";
 
 export default function GameScreen() {
-  const { numberOfTrees, numberOfJerries, numberOfMoguls, numberOfBears } =
-    useAppStore();
+  const gameLoopRef = useRef<number>();
+  const obstacleIdRef = useRef(0);
+  const obstaclesPassedRef = useRef(0);
+  
+  const { 
+    gameStarted, 
+    score, 
+    skierPosition, 
+    obstacles, 
+    gameSpeed,
+    gameOver,
+    currentTree,
+    currentJerry,
+    currentMogul,
+    currentBear,
+    startGame,
+    stopGame,
+    updateSkierPosition,
+    addObstacle,
+    updateObstacles,
+    addScore,
+    endGame,
+    setGameSpeed,
+    currentMountain
+  } = useAppStore();
 
-  const [gameStarted, setGameStarted] = useState(false);
-  const [showMountainModal, setShowMountainModal] = useState(false);
-  const [score, setScore] = useState(0);
-  const [skierPosition, setSkierPosition] = useState<Position>({
-    x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2,
-    y: SCREEN_HEIGHT * 0.3,
-  });
-  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
-  const [gameSpeed, setGameSpeed] = useState(2);
-  const [spawnedCounts, setSpawnedCounts] = useState({
-    trees: 0,
-    jerries: 0,
-    moguls: 0,
-    bears: 0,
-  });
+  const getObstacleEmoji = (type: string) => {
+    switch (type) {
+      case 'tree': return '🌲';
+      case 'jerry': return '⛷️';
+      case 'mogul': return '⛰️';
+      case 'bear': return '🐻';
+      default: return '❓';
+    }
+  };
 
-  const gameLoopRef = useRef<any>(null);
-  const obstacleSpawnRef = useRef<any>(null);
-  const scoreRef = useRef(0);
+  const generateObstacle = useCallback((): { id: number; type: 'tree' | 'jerry' | 'mogul' | 'bear'; x: number; y: number; passed: boolean } | null => {
+    const enabledObstacles: ('tree' | 'jerry' | 'mogul' | 'bear')[] = [];
+    
+    const maxObstacles = {
+      tree: currentMountain.trees,
+      jerry: currentMountain.jerries,
+      mogul: currentMountain.moguls,
+      bear: currentMountain.bears
+    };
+    
+    const currentObstacleCounts = obstacles.reduce((acc, obstacle) => {
+      acc[obstacle.type]++;
+      return acc;
+    }, { tree: 0, jerry: 0, mogul: 0, bear: 0 });
+    
+    if (currentTree.index > 0 && currentObstacleCounts.tree < maxObstacles.tree) {
+      enabledObstacles.push('tree');
+    }
+    if (currentJerry.index > 0 && currentObstacleCounts.jerry < maxObstacles.jerry) {
+      enabledObstacles.push('jerry');
+    }
+    if (currentMogul.index > 0 && currentObstacleCounts.mogul < maxObstacles.mogul) {
+      enabledObstacles.push('mogul');
+    }
+    if (currentBear.index > 0 && currentObstacleCounts.bear < maxObstacles.bear) {
+      enabledObstacles.push('bear');
+    }
+    
+    if (enabledObstacles.length === 0) return null;
+    
+    const type = enabledObstacles[Math.floor(Math.random() * enabledObstacles.length)];
+    const x = Math.random() * (SCREEN_WIDTH - OBSTACLE_SIZE);
+    
+    return {
+      id: obstacleIdRef.current++,
+      type,
+      x,
+      y: SCREEN_HEIGHT,
+      passed: false
+    };
+  }, [currentTree, currentJerry, currentMogul, currentBear, currentMountain, obstacles]);
 
-  const { moveSkierLeft, moveSkierRight } = useGameControls(gameStarted);
-  const { spawnObstacle } = useObstacleSpawner(
-    gameStarted,
-    numberOfTrees > 0,
-    numberOfJerries > 0,
-    numberOfMoguls > 0,
-    numberOfBears > 0,
-    spawnedCounts,
-    numberOfTrees,
-    numberOfJerries,
-    numberOfMoguls,
-    numberOfBears,
-  );
-
-  const { selectMountain } = useMountainSelection();
-
-  const startGame = useCallback(() => {
-    setShowMountainModal(true);
+  const checkCollision = useCallback((skierPos: any, obstacle: any) => {
+    const skierLeft = skierPos.x;
+    const skierRight = skierPos.x + SKIER_SIZE;
+    const skierTop = skierPos.y;
+    const skierBottom = skierPos.y + SKIER_SIZE;
+    
+    const obstacleLeft = obstacle.x;
+    const obstacleRight = obstacle.x + OBSTACLE_SIZE;
+    const obstacleTop = obstacle.y;
+    const obstacleBottom = obstacle.y + OBSTACLE_SIZE;
+    
+    return !(
+      skierLeft > obstacleRight ||
+      skierRight < obstacleLeft ||
+      skierTop > obstacleBottom ||
+      skierBottom < obstacleTop
+    );
   }, []);
 
-  const handleMountainSelect = useCallback(
-    (mountain: (typeof mountainArray)[0]) => {
-      selectMountain(mountain);
-      setSpawnedCounts({ trees: 0, jerries: 0, moguls: 0, bears: 0 });
-      setShowMountainModal(false);
-      setGameStarted(true);
-      setScore(0);
-      setSkierPosition({
-        x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2,
-        y: SCREEN_HEIGHT * 0.3,
-      });
-      setObstacles([]);
-      setGameSpeed(2);
-    },
-    [selectMountain],
-  );
-
-  const handleSkierMove = useCallback(
-    (action: { type: "left" | "right"; x: number }) => {
-      if (!gameStarted) return;
-      setSkierPosition((prev) => {
-        const newX =
-          action.type === "left"
-            ? Math.max(0, prev.x + action.x)
-            : Math.min(SCREEN_WIDTH - SKIER_SIZE, prev.x + action.x);
-        return { ...prev, x: newX };
-      });
-    },
-    [gameStarted],
-  );
+  const gameLoop = useCallback(() => {
+    if (!gameStarted || gameOver) return;
+    
+    updateObstacles(obstacles.map(obstacle => {
+      const newY = obstacle.y - gameSpeed;
+      
+      if (newY < -OBSTACLE_SIZE) {
+        if (!obstacle.passed) {
+          addScore(10);
+          obstaclesPassedRef.current++;
+          
+          if (obstaclesPassedRef.current % 10 === 0) {
+            setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
+          }
+        }
+        return null;
+      }
+      
+      const updatedObstacle = { ...obstacle, y: newY };
+      
+      if (!obstacle.passed && newY < skierPosition.y - SKIER_SIZE) {
+        updatedObstacle.passed = true;
+        addScore(10);
+        obstaclesPassedRef.current++;
+        
+        if (obstaclesPassedRef.current % 10 === 0) {
+          setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
+        }
+      }
+      
+      if (checkCollision(skierPosition, updatedObstacle)) {
+        endGame();
+        return null;
+      }
+      
+      return updatedObstacle;
+    }).filter(Boolean));
+    
+    if (Math.random() < 0.02) {
+      const newObstacle = generateObstacle();
+      if (newObstacle) {
+        newObstacle.y = SCREEN_HEIGHT;
+        addObstacle(newObstacle);
+      }
+    }
+  }, [gameStarted, gameOver, obstacles, gameSpeed, skierPosition, updateObstacles, addScore, addObstacle, generateObstacle, checkCollision, endGame]);
 
   useEffect(() => {
-    if (gameStarted) {
-      gameLoopRef.current = setInterval(() => {
-        setObstacles((prev) => {
-          const updated = prev
-            .map((obstacle) => ({
-              ...obstacle,
-              y: obstacle.y - gameSpeed,
-            }))
-            .filter((obstacle) => obstacle.y > -OBSTACLE_SIZE);
-
-          updated.forEach((obstacle) => {
-            if (
-              !obstacle.passed &&
-              obstacle.y < skierPosition.y + SKIER_SIZE &&
-              obstacle.y > skierPosition.y - SKIER_SIZE
-            ) {
-              obstacle.passed = true;
-              setScore(scoreRef.current + 10);
-            }
-          });
-
-          return updated.filter((obstacle) => obstacle.y > -OBSTACLE_SIZE);
-        });
-
-        setGameSpeed((prev) => Math.min(prev + 0.02, 10));
-      }, 16);
-
-      obstacleSpawnRef.current = setInterval(() => {
-        const newObstacle = spawnObstacle();
-        if (newObstacle) {
-          setSpawnedCounts((prev) => ({
-            ...prev,
-            [newObstacle.type === "tree"
-              ? "trees"
-              : newObstacle.type === "jerry"
-                ? "jerries"
-                : newObstacle.type === "mogul"
-                  ? "moguls"
-                  : "bears"]:
-              prev[
-                newObstacle.type === "tree"
-                  ? "trees"
-                  : newObstacle.type === "jerry"
-                    ? "jerries"
-                    : newObstacle.type === "mogul"
-                      ? "moguls"
-                      : "bears"
-              ] + 1,
-          }));
-          setObstacles((prev) => [...prev, newObstacle]);
-        }
-      }, 1500);
+    if (gameStarted && !gameOver) {
+      const interval = setInterval(gameLoop, 16);
+      gameLoopRef.current = interval;
+      return () => clearInterval(interval);
     }
-  }, [gameStarted, gameSpeed, spawnObstacle, skierPosition]);
+  }, [gameStarted, gameOver, gameLoop]);
 
-  const stopGame = useCallback(() => {
-    setGameStarted(false);
-    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-    if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
-  }, []);
+  const handleTouch = useCallback((evt: any) => {
+    if (!gameStarted || gameOver) return;
+    
+    const { locationX, locationY } = evt.nativeEvent;
+    const step = 30;
+    let newX = skierPosition.x;
+    let newY = skierPosition.y;
+    
+    const centerX = SCREEN_WIDTH / 2;
+    const centerY = SCREEN_HEIGHT / 2;
+    
+    if (locationX < centerX - 50) {
+      newX = Math.max(0, skierPosition.x - step);
+    } else if (locationX > centerX + 50) {
+      newX = Math.min(SCREEN_WIDTH - SKIER_SIZE, skierPosition.x + step);
+    }
+    
+    if (locationY < centerY - 50) {
+      newY = Math.max(100, skierPosition.y - step);
+    } else if (locationY > centerY + 50) {
+      newY = Math.min(SCREEN_HEIGHT - SKIER_SIZE - 100, skierPosition.y + step);
+    }
+    
+    updateSkierPosition({ x: newX, y: newY });
+  }, [gameStarted, gameOver, skierPosition, updateSkierPosition]);
+
+  const handleStartGame = () => {
+    startGame();
+  };
+
+  const handleStopGame = () => {
+    Alert.alert(
+      "Stop Game",
+      "Are you sure you want to stop the game?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Stop", 
+          style: "destructive",
+          onPress: stopGame 
+        }
+      ]
+    );
+  };
+
+  if (gameOver) {
+    return (
+      <View style={gameStyles.container}>
+        <Text style={{ fontSize: 24, color: 'white', textAlign: 'center', marginTop: 100 }}>
+          Game Over!
+        </Text>
+        <Text style={{ fontSize: 20, color: 'white', textAlign: 'center', marginTop: 20 }}>
+          Final Score: {score}
+        </Text>
+        <TouchableOpacity 
+          style={[gameStyles.startButton, { alignSelf: 'center', marginTop: 30 }]}
+          onPress={handleStartGame}
+        >
+          <Text style={gameStyles.buttonText}>Play Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={gameStyles.container}>
@@ -161,120 +228,45 @@ export default function GameScreen() {
         <Text style={gameStyles.score}>Score: {score}</Text>
         <Text style={gameStyles.speed}>Speed: {gameSpeed.toFixed(1)}</Text>
       </View>
-
-      <View style={gameStyles.gameArea}>
-        <View
-          style={[
-            gameStyles.skier,
-            {
-              left: skierPosition.x,
-              top: skierPosition.y,
-            },
-          ]}
-        >
-          <Text style={gameStyles.skierEmoji}>⛷️</Text>
-        </View>
-
-        {obstacles.map((obstacle) => (
-          <View
-            key={obstacle.id}
-            style={[
-              gameStyles.obstacle,
-              {
-                left: obstacle.x,
-                top: obstacle.y,
-              },
-            ]}
-          >
-            <Text style={gameStyles.obstacleEmoji}>
-              {obstacle.type === "tree" && "🌲"}
-              {obstacle.type === "jerry" && "🎿"}
-              {obstacle.type === "mogul" && "⛰️"}
-              {obstacle.type === "bear" && "🐻"}
-            </Text>
-          </View>
-        ))}
-
-        <View style={gameStyles.controls}>
-          {!gameStarted ? (
-            <TouchableOpacity
-              style={gameStyles.startButton}
-              onPress={startGame}
-            >
-              <Text style={gameStyles.buttonText}>Start Game</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={gameStyles.gameControls}>
-              <TouchableOpacity
-                style={gameStyles.controlButton}
-                onPress={() => {
-                  const move = moveSkierLeft();
-                  if (move) handleSkierMove(move);
-                }}
-              >
-                <Text style={gameStyles.buttonText}>←</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={gameStyles.controlButton}
-                onPress={stopGame}
-              >
-                <Text style={gameStyles.buttonText}>Stop</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={gameStyles.controlButton}
-                onPress={() => {
-                  const move = moveSkierRight();
-                  if (move) handleSkierMove(move);
-                }}
-              >
-                <Text style={gameStyles.buttonText}>→</Text>
-              </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={gameStyles.gameArea}
+        onPress={handleTouch}
+        activeOpacity={1}
+      >
+        {gameStarted && (
+          <>
+            <View style={[gameStyles.skier, { left: skierPosition.x, top: skierPosition.y }]}>
+              <Text style={gameStyles.skierEmoji}>{skierEmoji}</Text>
             </View>
-          )}
-        </View>
-
-        <View style={gameStyles.instructions}>
-          <Text style={gameStyles.instructionText}>
-            Use touch controls to move left and right
-          </Text>
-        </View>
-
-        {showMountainModal && (
-          <View style={gameStyles.modalOverlay}>
-            <View style={gameStyles.modalContent}>
-              <Text style={gameStyles.modalTitle}>Select Mountain</Text>
-              <View style={gameStyles.mountainList}>
-                {mountainArray.map((mountain) => (
-                  <TouchableOpacity
-                    key={mountain.index}
-                    style={gameStyles.mountainItem}
-                    onPress={() => handleMountainSelect(mountain)}
-                  >
-                    <View>
-                      <Text style={gameStyles.mountainName}>
-                        {mountain.name}
-                      </Text>
-                      <Text style={gameStyles.mountainDesc}>
-                        {mountain.desc}
-                      </Text>
-                      <View style={gameStyles.obstaclePreview}>
-                        <Text style={gameStyles.obstacleText}>
-                          🌲 {mountain.trees} | 🎿 {mountain.jerries} | ⛰️{" "}
-                          {mountain.moguls} | 🐻 {mountain.bears}
-                        </Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+            
+            {obstacles.map(obstacle => (
+              <View 
+                key={obstacle.id} 
+                style={[gameStyles.obstacle, { left: obstacle.x, top: obstacle.y }]}
+              >
+                <Text style={gameStyles.obstacleEmoji}>{getObstacleEmoji(obstacle.type)}</Text>
               </View>
-              <TouchableOpacity
-                style={gameStyles.cancelButton}
-                onPress={() => setShowMountainModal(false)}
-              >
-                <Text style={gameStyles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            ))}
+          </>
+        )}
+      </TouchableOpacity>
+      
+      <View style={gameStyles.controls}>
+        {!gameStarted ? (
+          <TouchableOpacity style={gameStyles.startButton} onPress={handleStartGame}>
+            <Text style={gameStyles.buttonText}>Start Game</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={gameStyles.instructions}>
+            <Text style={gameStyles.instructionText}>Tap anywhere on the game area to move</Text>
           </View>
+        )}
+        
+        {gameStarted && (
+          <TouchableOpacity style={gameStyles.stopButton} onPress={handleStopGame}>
+            <Text style={gameStyles.buttonText}>Stop Game</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>

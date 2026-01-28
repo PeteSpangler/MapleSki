@@ -9,6 +9,7 @@ export const gameStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 20,
+    paddingTop: 50,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
   score: {
@@ -125,39 +126,46 @@ export const gameStyles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: "100%",
-    maxWidth: 400,
-    maxHeight: "80%",
+    maxWidth: 350,
+    maxHeight: "70%",
   },
-  modalTitle: {
-    fontSize: 24,
+modalTitle: {
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 12,
     textAlign: "center",
   },
   mountainList: {
-    maxHeight: 350,
+    maxHeight: 250,
   },
   mountainItem: {
     backgroundColor: "#f5f5f5",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  mountainName: {
-    fontSize: 18,
+mountainName: {
+    fontSize: 16,
     fontWeight: "bold",
   },
   mountainDesc: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666",
-    marginTop: 5,
+    marginTop: 3,
   },
   obstaclePreview: {
-    marginTop: 5,
+    marginTop: 3,
   },
   obstacleText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#444",
+  },
+  stopButton: {
+    backgroundColor: "#dc3545",
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
   },
   cancelButton: {
     backgroundColor: "#dc3545",

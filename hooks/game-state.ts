@@ -1,9 +1,11 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { Bear, bearArray } from "../assets/bears/bearArray";
 import { Jerry, jerryArray } from "../assets/jerries/jerryArray";
 import { Mogul, mogulArray } from "../assets/moguls/mogulArray";
 import { Mountain, mountainArray } from "../assets/mountains/mountainArray";
 import { Tree, treeArray } from "../assets/trees/treeArray";
+import { Obstacle, SCREEN_WIDTH, SCREEN_HEIGHT, SKIER_SIZE } from "../game/types";
 
 export const defaultDownhillSpeed = 1;
 export const defaultBears = 0;
@@ -20,7 +22,13 @@ export enum Views {
   DefeatScreen,
 }
 
-type GameState = {
+export interface HighScore {
+  username: string;
+  score: number;
+  date: number;
+}
+
+export interface GameState {
   currentView: Views;
   lastView: Views;
   currentDownhillSpeed: number;
@@ -36,14 +44,24 @@ type GameState = {
   numberOfBears: number;
   numberOfTrees: number;
   numberOfJerries: number;
-
+  
+  // Game runtime state
+  gameStarted: boolean;
+  gameOver: boolean;
+  score: number;
+  highScores: HighScore[];
+  skierPosition: { x: number; y: number };
+  obstacles: Obstacle[];
+  gameSpeed: number;
+  
+  // Actions
   setCurrentView: (view: Views) => void;
   setCurrentMountain: (mountain: Mountain) => void;
   setCurrentBear: (bear: Bear) => void;
   setCurrentTree: (tree: Tree) => void;
   setCurrentJerry: (jerry: Jerry) => void;
   setCurrentMogul: (mogul: Mogul) => void;
-  setCurrentRoundSore: (score: number) => void;
+  setCurrentRoundScore: (score: number) => void;
   setCurrentSnowDepth: (update: number | ((prev: number) => number)) => void;
   setMoney: (update: number | ((prev: number) => number)) => void;
   setNumberOfMoguls: (update: number | ((prev: number) => number)) => void;
@@ -51,15 +69,27 @@ type GameState = {
   setNumberOfTrees: (update: number | ((prev: number) => number)) => void;
   setNumberOfJerries: (update: number | ((prev: number) => number)) => void;
   resetGame: () => void;
-};
+  
+  // Game actions
+  startGame: () => void;
+  stopGame: () => void;
+  updateSkierPosition: (position: { x: number; y: number }) => void;
+  addObstacle: (obstacle: Obstacle) => void;
+  updateObstacles: (obstacles: Obstacle[]) => void;
+  setGameSpeed: (update: number | ((prev: number) => number)) => void;
+  addScore: (points: number) => void;
+  endGame: () => void;
+  saveHighScore: (username: string, score: number) => void;
+  clearHighScores: () => void;
+}
 
-export const useAppStore = create<GameState>((set) => ({
-  currentBear: bearArray[1],
+const getDefaultState = () => ({
+  currentBear: bearArray[1] || { index: 0, type: "None" },
   currentDownhillSpeed: defaultDownhillSpeed,
-  currentJerry: jerryArray[1],
-  currentMountain: mountainArray[0],
-  currentMogul: mogulArray[1],
-  currentTree: treeArray[1],
+  currentJerry: jerryArray[1] || { index: 0, type: "None" },
+  currentMountain: mountainArray[0] || { index: 0, name: "Default", desc: "Default", trees: 0, jerries: 0, moguls: 0, bears: 0 },
+  currentMogul: mogulArray[1] || { index: 0, type: "none" },
+  currentTree: treeArray[1] || { index: 0, type: "None" },
   currentRoundScore: 0,
   currentSnowDepth: defaultSnowDepth,
   currentView: Views.Menu,
@@ -69,78 +99,162 @@ export const useAppStore = create<GameState>((set) => ({
   numberOfBears: defaultBears,
   numberOfTrees: defaultTrees,
   numberOfJerries: defaultJerries,
+  
+  // Game runtime state
+  gameStarted: false,
+  gameOver: false,
+  score: 0,
+  highScores: [] as HighScore[],
+  skierPosition: { x: 0, y: 0 },
+  obstacles: [] as Obstacle[],
+  gameSpeed: 0.75,
+});
 
-  setCurrentView: (view: Views) =>
-    set((state) => ({
-      lastView: state.currentView,
-      currentView: view,
-    })),
+export const useAppStore = create<GameState>()(
+  // Temporarily disable persist to debug frozen object error
+  // persist(
+    (set, get) => ({
+      ...getDefaultState(),
 
-  setCurrentMountain: (mountain: Mountain) =>
-    set({ currentMountain: mountain }),
+      // View setters
+      setCurrentView: (view: Views) =>
+        set((state) => ({
+          lastView: state.currentView,
+          currentView: view,
+        })),
 
-  setCurrentBear: (bear: Bear) => set({ currentBear: bear }),
+      setCurrentMountain: (mountain: Mountain) =>
+        set({ currentMountain: mountain }),
 
-  setCurrentTree: (tree: Tree) => set({ currentTree: tree }),
+      setCurrentBear: (bear: Bear) => set({ currentBear: bear }),
 
-  setCurrentJerry: (jerry: Jerry) => set({ currentJerry: jerry }),
+      setCurrentTree: (tree: Tree) => set({ currentTree: tree }),
 
-  setCurrentMogul: (mogul: Mogul) => set({ currentMogul: mogul }),
+      setCurrentJerry: (jerry: Jerry) => set({ currentJerry: jerry }),
 
-  setCurrentRoundSore(score) {
-    set({ currentRoundScore: score });
-  },
+      setCurrentMogul: (mogul: Mogul) => set({ currentMogul: mogul }),
 
-  setCurrentSnowDepth: (update: number | ((prev: number) => number)) =>
-    set((state) => ({
-      currentSnowDepth:
-        typeof update === "function" ? update(state.currentSnowDepth) : update,
-    })),
+      setCurrentRoundScore: (score: number) => set({ currentRoundScore: score }),
 
-  setMoney: (update) =>
-    set((state) => ({
-      money: typeof update === "function" ? update(state.money) : update,
-    })),
+      setCurrentSnowDepth: (update: number | ((prev: number) => number)) =>
+        set((state) => ({
+          currentSnowDepth:
+            typeof update === "function" ? update(state.currentSnowDepth) : update,
+        })),
 
-  setNumberOfBears: (update) =>
-    set((state) => ({
-      numberOfBears:
-        typeof update === "function" ? update(state.numberOfBears) : update,
-    })),
+      setMoney: (update) =>
+        set((state) => ({
+          money: typeof update === "function" ? update(state.money) : update,
+        })),
 
-  setNumberOfJerries: (update) =>
-    set((state) => ({
-      numberOfJerries:
-        typeof update === "function" ? update(state.numberOfJerries) : update,
-    })),
+      setNumberOfBears: (update) =>
+        set((state) => ({
+          numberOfBears:
+            typeof update === "function" ? update(state.numberOfBears) : update,
+        })),
 
-  setNumberOfMoguls: (update) =>
-    set((state) => ({
-      numberOfMoguls:
-        typeof update === "function" ? update(state.numberOfMoguls) : update,
-    })),
+      setNumberOfJerries: (update) =>
+        set((state) => ({
+          numberOfJerries:
+            typeof update === "function" ? update(state.numberOfJerries) : update,
+        })),
 
-  setNumberOfTrees: (update) =>
-    set((state) => ({
-      numberOfTrees:
-        typeof update === "function" ? update(state.numberOfTrees) : update,
-    })),
+      setNumberOfMoguls: (update) =>
+        set((state) => ({
+          numberOfMoguls:
+            typeof update === "function" ? update(state.numberOfMoguls) : update,
+        })),
 
-  resetGame: () =>
-    set(() => ({
-      currentBear: bearArray[1],
-      currentDownhillSpeed: defaultDownhillSpeed,
-      currentJerry: jerryArray[1],
-      currentMogul: mogulArray[1],
-      currentRoundScore: 0,
-      currentSnowDepth: defaultSnowDepth,
-      currentTree: treeArray[1],
-      currentView: Views.Menu,
-      lastView: Views.Menu,
-      money: 5,
-      numberOfMoguls: defaultNumberOfMoguls,
-      numberOfBears: defaultBears,
-      numberOfTrees: defaultTrees,
-      numberOfJerries: defaultJerries,
-    })),
-}));
+      setNumberOfTrees: (update) =>
+        set((state) => ({
+          numberOfTrees:
+            typeof update === "function" ? update(state.numberOfTrees) : update,
+        })),
+
+      resetGame: () => {
+        const defaultState = getDefaultState();
+        set({
+          ...defaultState,
+          currentView: get().currentView, // Keep current view
+          lastView: get().lastView, // Keep last view
+          highScores: get().highScores, // Keep high scores
+        });
+      },
+
+      // Game actions
+      startGame: () =>
+        set(() => ({
+          gameStarted: true,
+          gameOver: false,
+          score: 0,
+          skierPosition: { x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2, y: SCREEN_HEIGHT * 0.5 },
+          obstacles: [],
+          gameSpeed: 0.75,
+        })),
+
+      stopGame: () =>
+        set(() => ({
+          gameStarted: false,
+        })),
+
+      updateSkierPosition: (position: { x: number; y: number }) =>
+        set(() => ({ skierPosition: position })),
+
+      addObstacle: (obstacle: Obstacle) =>
+        set((state) => ({
+          obstacles: [...state.obstacles, obstacle],
+        })),
+
+      updateObstacles: (obstacles: Obstacle[]) =>
+        set(() => ({ obstacles })),
+
+      setGameSpeed: (update) =>
+        set((state) => ({
+          gameSpeed: typeof update === "function" ? update(state.gameSpeed) : update,
+        })),
+
+      addScore: (points: number) =>
+        set((state) => ({ score: state.score + points })),
+
+      endGame: () =>
+        set(() => ({
+          gameOver: true,
+          gameStarted: false,
+          currentView: Views.DefeatScreen,
+        })),
+
+      saveHighScore: (username: string, score: number) =>
+        set((state) => {
+          const newHighScore: HighScore = {
+            username: username.toUpperCase(),
+            score,
+            date: Date.now(),
+          };
+          const updatedHighScores = [...state.highScores, newHighScore]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+          return { highScores: updatedHighScores };
+        }),
+
+      clearHighScores: () => set({ highScores: [] }),
+    })
+  // {
+  //   name: "maple-ski-storage",
+  //   partialize: (state) => ({
+  //     highScores: state.highScores,
+  //     money: state.money,
+  //     numberOfMoguls: state.numberOfMoguls,
+  //     numberOfBears: state.numberOfBears,
+  //     numberOfTrees: state.numberOfTrees,
+  //     numberOfJerries: state.numberOfJerries,
+  //     currentBear: state.currentBear,
+  //     currentJerry: state.currentJerry,
+  //     currentMogul: state.currentMogul,
+  //     currentTree: state.currentTree,
+  //     currentMountain: state.currentMountain,
+  //     currentSnowDepth: state.currentSnowDepth,
+  //     currentDownhillSpeed: state.currentDownhillSpeed,
+  //   }),
+  // }
+  // )
+);

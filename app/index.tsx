@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import Link from "expo-router/link";
 import {
   Alert,
@@ -6,20 +5,22 @@ import {
   Platform,
   StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 import ParallaxScrollView from "../components/parallax-scroll-view";
 import { ThemedText } from "../components/themed-text";
 import { ThemedView } from "../components/themed-view";
 import { useThemeColor } from "../hooks/use-theme-color";
+import MountainSelectModal from "../components/mountain-select";
+import { useState } from "react";
+import { useAppStore } from "../hooks/game-state";
+import { Mountain } from "../assets/mountains/mountainArray";
 
 export default function HomeScreen() {
-  const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
+  const [showMountainSelect, setShowMountainSelect] = useState(false);
+  const { setCurrentMountain, currentMountain } = useAppStore();
   const tintColor = useThemeColor({}, "tint");
-
-  const safeBackgroundColor = backgroundColor || "#fff";
-  const safeTextColor = textColor || "#11181C";
   const safeTintColor = tintColor || "#0a7ea4";
 
   const handleExit = () => {
@@ -43,10 +44,7 @@ export default function HomeScreen() {
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
         headerImage={
-          <Image
-            source={require("@/assets/images/partial-react-logo.png")}
-            style={styles.headerImage}
-          />
+          <View style={styles.headerImage} />
         }
       >
         <ThemedView style={styles.container}>
@@ -58,7 +56,7 @@ export default function HomeScreen() {
           <ThemedView style={styles.menuContainer}>
             <Link href="/gameScreen" asChild>
               <TouchableOpacity
-                style={[styles.menuButton, { backgroundColor: safeTintColor }]}
+                style={[styles.menuButton, styles.startGameButton]}
               >
                 <ThemedText
                   style={[styles.menuButtonText, { color: "#ffffff" }]}
@@ -68,17 +66,16 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Link>
 
-            <Link href="/options" asChild>
-              <TouchableOpacity
-                style={[styles.menuButton, { backgroundColor: safeTextColor, opacity: 0.8 }]}
+            <TouchableOpacity
+              style={[styles.menuButton, { backgroundColor: "#6495ED" }]}
+              onPress={() => setShowMountainSelect(true)}
+            >
+              <ThemedText
+                style={[styles.menuButtonText, { color: "#ffffff" }]}
               >
-                <ThemedText
-                  style={[styles.menuButtonText, { color: safeBackgroundColor }]}
-                >
-                  Game Options
-                </ThemedText>
-              </TouchableOpacity>
-            </Link>
+                Mountain: {currentMountain.name}
+              </ThemedText>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.menuButton, styles.exitButton]}
@@ -93,6 +90,12 @@ export default function HomeScreen() {
           </ThemedView>
         </ThemedView>
       </ParallaxScrollView>
+      
+      <MountainSelectModal
+        visible={showMountainSelect}
+        onClose={() => setShowMountainSelect(false)}
+        onSelect={(mountain: Mountain) => setCurrentMountain(mountain)}
+      />
     </>
   );
 }
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 60,
-    marginBottom: 20,
+    marginBottom: 30,
     ...Platform.select({
       ios: {
         elevation: 3,
@@ -149,6 +152,14 @@ const styles = StyleSheet.create({
   },
   exitButton: {
     backgroundColor: "#dc3545",
+  },
+  startGameButton: {
+    backgroundColor: "#4CAF50",
+    marginBottom: 30,
+    minHeight: 70,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerImage: {
     height: 178,
