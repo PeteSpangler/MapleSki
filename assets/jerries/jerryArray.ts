@@ -11,3 +11,4 @@ export const jerryArray: Jerry[] = [
 ];
 
 export const skierEmoji = "⛷️";
+export const jerryEmoji = "🐢";

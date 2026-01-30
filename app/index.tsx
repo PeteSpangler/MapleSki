@@ -21,7 +21,6 @@ export default function HomeScreen() {
   const [showMountainSelect, setShowMountainSelect] = useState(false);
   const { setCurrentMountain, currentMountain } = useAppStore();
   const tintColor = useThemeColor({}, "tint");
-  const safeTintColor = tintColor || "#0a7ea4";
 
   const handleExit = () => {
     Alert.alert("Exit Game", "Are you sure you want to exit MapleSki?", [

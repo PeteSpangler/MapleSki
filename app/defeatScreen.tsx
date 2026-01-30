@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView } from "react-native";
 import { ThemedText } from "../components/themed-text";
 import { ThemedView } from "../components/themed-view";
-import { useAppStore, HighScore } from "../hooks/game-state";
+import { useAppStore, HighScore, Views } from "../hooks/game-state";
 import { useThemeColor } from "../hooks/use-theme-color";
 
 
@@ -12,7 +12,8 @@ export default function DefeatScreen() {
     highScores, 
     saveHighScore, 
     setCurrentView, 
-    resetGame 
+    resetGame,
+    loadHighScores
   } = useAppStore();
 
   const [username, setUsername] = useState("");
@@ -23,13 +24,20 @@ export default function DefeatScreen() {
   const tintColor = useThemeColor({}, "tint");
 
   useEffect(() => {
+    // Load high scores on component mount
+    loadHighScores();
+  }, [loadHighScores]);
+
+  useEffect(() => {
+    console.log('Defeat screen - Score:', score, 'HighScores:', highScores);
+    
     // Check if current score qualifies for high scores
     const qualifies = highScores.length < 10 || score > highScores[highScores.length - 1]?.score;
     setIsHighScore(qualifies);
   }, [score, highScores]);
 
   const handleSaveHighScore = () => {
-    if (username.length !== 3) {
+    if (username.trim().length !== 3) {
       Alert.alert("Invalid Username", "Please enter exactly 3 letters");
       return;
     }
@@ -46,10 +54,12 @@ export default function DefeatScreen() {
 
   const handlePlayAgain = () => {
     resetGame();
-    setCurrentView(0); // Views.Menu
+    setCurrentView(Views.Menu);
   };
 
   const renderHighScores = () => {
+    console.log('High scores:', highScores, 'Length:', highScores.length);
+    
     if (highScores.length === 0) {
       return (
         <ThemedText style={styles.noScoresText}>
@@ -151,13 +161,20 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     marginBottom: 20,
-    marginTop: 40,
+    marginTop: 60,
   },
   scoreText: {
     textAlign: "center",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 30,
+  },
+  currentScoreText: {
+    textAlign: "center",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 30,
+    color: "#4CAF50",
   },
   currentScoreText: {
     textAlign: "center",

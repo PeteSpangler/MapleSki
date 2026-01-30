@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { View, Text, TouchableOpacity, Alert, PanResponder } from "react-native";
 import { useAppStore } from "../hooks/game-state";
 import { gameStyles } from "./styles";
-import { skierEmoji } from "../assets/jerries/jerryArray";
+import { skierEmoji, jerryEmoji } from "../assets/jerries/jerryArray";
 import { SCREEN_WIDTH, SCREEN_HEIGHT, SKIER_SIZE, OBSTACLE_SIZE } from "./types";
 
 export default function GameScreen() {
   const gameLoopRef = useRef<number>();
   const obstacleIdRef = useRef(0);
   const obstaclesPassedRef = useRef(0);
+  const gameStartTimeRef = useRef<number>(0);
+  const lastSpeedIncreaseRef = useRef<number>(0);
   
   const { 
     gameStarted, 
@@ -35,7 +37,7 @@ export default function GameScreen() {
   const getObstacleEmoji = (type: string) => {
     switch (type) {
       case 'tree': return '🌲';
-      case 'jerry': return '⛷️';
+      case 'jerry': return jerryEmoji;
       case 'mogul': return '⛰️';
       case 'bear': return '🐻';
       default: return '❓';
@@ -106,6 +108,16 @@ export default function GameScreen() {
   const gameLoop = useCallback(() => {
     if (!gameStarted || gameOver) return;
     
+    // Check for time-based speed increase every 10 seconds
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - gameStartTimeRef.current;
+    const timeSinceLastIncrease = currentTime - lastSpeedIncreaseRef.current;
+    
+    if (timeSinceLastIncrease >= 10000) { // 10 seconds = 10000ms
+      setGameSpeed((prev: number) => Math.min(prev * 1.1, 5)); // 10% increase
+      lastSpeedIncreaseRef.current = currentTime;
+    }
+    
     updateObstacles(obstacles.map(obstacle => {
       const newY = obstacle.y - gameSpeed;
       
@@ -114,6 +126,7 @@ export default function GameScreen() {
           addScore(10);
           obstaclesPassedRef.current++;
           
+          // Keep obstacle-based speed increase as well
           if (obstaclesPassedRef.current % 10 === 0) {
             setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
           }
@@ -128,6 +141,7 @@ export default function GameScreen() {
         addScore(10);
         obstaclesPassedRef.current++;
         
+        // Keep obstacle-based speed increase as well
         if (obstaclesPassedRef.current % 10 === 0) {
           setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
         }
@@ -148,13 +162,21 @@ export default function GameScreen() {
         addObstacle(newObstacle);
       }
     }
-  }, [gameStarted, gameOver, obstacles, gameSpeed, skierPosition, updateObstacles, addScore, addObstacle, generateObstacle, checkCollision, endGame]);
+  }, [gameStarted, gameOver, obstacles, gameSpeed, skierPosition, updateObstacles, addScore, addObstacle, generateObstacle, checkCollision, endGame, setGameSpeed]);
 
   useEffect(() => {
     if (gameStarted && !gameOver) {
+      if (gameStartTimeRef.current === 0) {
+        gameStartTimeRef.current = Date.now();
+        lastSpeedIncreaseRef.current = Date.now();
+      }
+      
       const interval = setInterval(gameLoop, 16);
       gameLoopRef.current = interval;
       return () => clearInterval(interval);
+    } else if (!gameStarted) {
+      gameStartTimeRef.current = 0;
+      lastSpeedIncreaseRef.current = 0;
     }
   }, [gameStarted, gameOver, gameLoop]);
 

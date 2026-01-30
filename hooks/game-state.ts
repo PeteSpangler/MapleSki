@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Bear, bearArray } from "../assets/bears/bearArray";
 import { Jerry, jerryArray } from "../assets/jerries/jerryArray";
 import { Mogul, mogulArray } from "../assets/moguls/mogulArray";
@@ -55,6 +55,7 @@ export interface GameState {
   gameSpeed: number;
   
   // Actions
+  loadHighScores: () => Promise<void>;
   setCurrentView: (view: Views) => void;
   setCurrentMountain: (mountain: Mountain) => void;
   setCurrentBear: (bear: Bear) => void;
@@ -79,8 +80,8 @@ export interface GameState {
   setGameSpeed: (update: number | ((prev: number) => number)) => void;
   addScore: (points: number) => void;
   endGame: () => void;
-  saveHighScore: (username: string, score: number) => void;
-  clearHighScores: () => void;
+  saveHighScore: (username: string, score: number) => Promise<void>;
+  clearHighScores: () => Promise<void>;
 }
 
 const getDefaultState = () => ({
@@ -107,154 +108,162 @@ const getDefaultState = () => ({
   highScores: [] as HighScore[],
   skierPosition: { x: 0, y: 0 },
   obstacles: [] as Obstacle[],
-  gameSpeed: 0.75,
+  gameSpeed: 2.5,
 });
 
 export const useAppStore = create<GameState>()(
-  // Temporarily disable persist to debug frozen object error
-  // persist(
-    (set, get) => ({
-      ...getDefaultState(),
+  (set, get) => ({
+    ...getDefaultState(),
+    
+    // Load high scores from AsyncStorage on init
+    loadHighScores: async () => {
+      try {
+        const stored = await AsyncStorage.getItem('maple-ski-highscores');
+        if (stored) {
+          const highScores = JSON.parse(stored);
+          set({ highScores });
+        }
+      } catch (error) {
+        console.log('Failed to load high scores:', error);
+      }
+    },
 
-      // View setters
-      setCurrentView: (view: Views) =>
-        set((state) => ({
-          lastView: state.currentView,
-          currentView: view,
-        })),
+    // View setters
+    setCurrentView: (view: Views) =>
+      set((state) => ({
+        lastView: state.currentView,
+        currentView: view,
+      })),
 
-      setCurrentMountain: (mountain: Mountain) =>
-        set({ currentMountain: mountain }),
+    setCurrentMountain: (mountain: Mountain) =>
+      set({ currentMountain: mountain }),
 
-      setCurrentBear: (bear: Bear) => set({ currentBear: bear }),
+    setCurrentBear: (bear: Bear) => set({ currentBear: bear }),
 
-      setCurrentTree: (tree: Tree) => set({ currentTree: tree }),
+    setCurrentTree: (tree: Tree) => set({ currentTree: tree }),
 
-      setCurrentJerry: (jerry: Jerry) => set({ currentJerry: jerry }),
+    setCurrentJerry: (jerry: Jerry) => set({ currentJerry: jerry }),
 
-      setCurrentMogul: (mogul: Mogul) => set({ currentMogul: mogul }),
+    setCurrentMogul: (mogul: Mogul) => set({ currentMogul: mogul }),
 
-      setCurrentRoundScore: (score: number) => set({ currentRoundScore: score }),
+    setCurrentRoundScore: (score: number) => set({ currentRoundScore: score }),
 
-      setCurrentSnowDepth: (update: number | ((prev: number) => number)) =>
-        set((state) => ({
-          currentSnowDepth:
-            typeof update === "function" ? update(state.currentSnowDepth) : update,
-        })),
+    setCurrentSnowDepth: (update: number | ((prev: number) => number)) =>
+      set((state) => ({
+        currentSnowDepth:
+          typeof update === "function" ? update(state.currentSnowDepth) : update,
+      })),
 
-      setMoney: (update) =>
-        set((state) => ({
-          money: typeof update === "function" ? update(state.money) : update,
-        })),
+    setMoney: (update) =>
+      set((state) => ({
+        money: typeof update === "function" ? update(state.money) : update,
+      })),
 
-      setNumberOfBears: (update) =>
-        set((state) => ({
-          numberOfBears:
-            typeof update === "function" ? update(state.numberOfBears) : update,
-        })),
+    setNumberOfBears: (update) =>
+      set((state) => ({
+        numberOfBears:
+          typeof update === "function" ? update(state.numberOfBears) : update,
+      })),
 
-      setNumberOfJerries: (update) =>
-        set((state) => ({
-          numberOfJerries:
-            typeof update === "function" ? update(state.numberOfJerries) : update,
-        })),
+    setNumberOfJerries: (update) =>
+      set((state) => ({
+        numberOfJerries:
+          typeof update === "function" ? update(state.numberOfJerries) : update,
+      })),
 
-      setNumberOfMoguls: (update) =>
-        set((state) => ({
-          numberOfMoguls:
-            typeof update === "function" ? update(state.numberOfMoguls) : update,
-        })),
+    setNumberOfMoguls: (update) =>
+      set((state) => ({
+        numberOfMoguls:
+          typeof update === "function" ? update(state.numberOfMoguls) : update,
+      })),
 
-      setNumberOfTrees: (update) =>
-        set((state) => ({
-          numberOfTrees:
-            typeof update === "function" ? update(state.numberOfTrees) : update,
-        })),
+    setNumberOfTrees: (update) =>
+      set((state) => ({
+        numberOfTrees:
+          typeof update === "function" ? update(state.numberOfTrees) : update,
+      })),
 
-      resetGame: () => {
-        const defaultState = getDefaultState();
-        set({
-          ...defaultState,
-          currentView: get().currentView, // Keep current view
-          lastView: get().lastView, // Keep last view
-          highScores: get().highScores, // Keep high scores
-        });
-      },
+    resetGame: () => {
+      const defaultState = getDefaultState();
+      set({
+        ...defaultState,
+        currentView: get().currentView, // Keep current view
+        lastView: get().lastView, // Keep last view
+        highScores: get().highScores, // Keep high scores
+      });
+    },
 
-      // Game actions
-      startGame: () =>
-        set(() => ({
-          gameStarted: true,
-          gameOver: false,
-          score: 0,
-          skierPosition: { x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2, y: SCREEN_HEIGHT * 0.5 },
-          obstacles: [],
-          gameSpeed: 0.75,
-        })),
+    // Game actions
+    startGame: () =>
+      set(() => ({
+        gameStarted: true,
+        gameOver: false,
+        score: 0,
+        skierPosition: { x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2, y: SCREEN_HEIGHT * 0.5 },
+        obstacles: [],
+        gameSpeed: 2.5,
+      })),
 
-      stopGame: () =>
-        set(() => ({
-          gameStarted: false,
-        })),
+    stopGame: () =>
+      set(() => ({
+        gameStarted: false,
+      })),
 
-      updateSkierPosition: (position: { x: number; y: number }) =>
-        set(() => ({ skierPosition: position })),
+    updateSkierPosition: (position: { x: number; y: number }) =>
+      set(() => ({ skierPosition: position })),
 
-      addObstacle: (obstacle: Obstacle) =>
-        set((state) => ({
-          obstacles: [...state.obstacles, obstacle],
-        })),
+    addObstacle: (obstacle: Obstacle) =>
+      set((state) => ({
+        obstacles: [...state.obstacles, obstacle],
+      })),
 
-      updateObstacles: (obstacles: Obstacle[]) =>
-        set(() => ({ obstacles })),
+    updateObstacles: (obstacles: Obstacle[]) =>
+      set(() => ({ obstacles })),
 
-      setGameSpeed: (update) =>
-        set((state) => ({
-          gameSpeed: typeof update === "function" ? update(state.gameSpeed) : update,
-        })),
+    setGameSpeed: (update) =>
+      set((state) => ({
+        gameSpeed: typeof update === "function" ? update(state.gameSpeed) : update,
+      })),
 
-      addScore: (points: number) =>
-        set((state) => ({ score: state.score + points })),
+    addScore: (points: number) =>
+      set((state) => ({ score: state.score + points })),
 
-      endGame: () =>
-        set(() => ({
-          gameOver: true,
-          gameStarted: false,
-          currentView: Views.DefeatScreen,
-        })),
+    endGame: () =>
+      set(() => ({
+        gameOver: true,
+        gameStarted: false,
+        currentView: Views.DefeatScreen,
+      })),
 
-      saveHighScore: (username: string, score: number) =>
-        set((state) => {
-          const newHighScore: HighScore = {
-            username: username.toUpperCase(),
-            score,
-            date: Date.now(),
-          };
-          const updatedHighScores = [...state.highScores, newHighScore]
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 10);
-          return { highScores: updatedHighScores };
-        }),
+    saveHighScore: async (username: string, score: number) => {
+      try {
+        const newHighScore: HighScore = {
+          username: username.toUpperCase(),
+          score,
+          date: Date.now(),
+        };
+        
+        const currentHighScores = get().highScores;
+        const updatedHighScores = [...currentHighScores, newHighScore]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10);
+        
+        set({ highScores: updatedHighScores });
+        
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('maple-ski-highscores', JSON.stringify(updatedHighScores));
+      } catch (error) {
+        console.log('Failed to save high score:', error);
+      }
+    },
 
-      clearHighScores: () => set({ highScores: [] }),
-    })
-  // {
-  //   name: "maple-ski-storage",
-  //   partialize: (state) => ({
-  //     highScores: state.highScores,
-  //     money: state.money,
-  //     numberOfMoguls: state.numberOfMoguls,
-  //     numberOfBears: state.numberOfBears,
-  //     numberOfTrees: state.numberOfTrees,
-  //     numberOfJerries: state.numberOfJerries,
-  //     currentBear: state.currentBear,
-  //     currentJerry: state.currentJerry,
-  //     currentMogul: state.currentMogul,
-  //     currentTree: state.currentTree,
-  //     currentMountain: state.currentMountain,
-  //     currentSnowDepth: state.currentSnowDepth,
-  //     currentDownhillSpeed: state.currentDownhillSpeed,
-  //   }),
-  // }
-  // )
+    clearHighScores: async () => {
+      try {
+        set({ highScores: [] });
+        await AsyncStorage.removeItem('maple-ski-highscores');
+      } catch (error) {
+        console.log('Failed to clear high scores:', error);
+      }
+    },
+  })
 );
