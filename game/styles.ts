@@ -42,6 +42,13 @@ export const gameStyles = StyleSheet.create({
     width: 30,
     height: 30,
   },
+  snowman: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 60, // Twice the size of regular obstacles
+    height: 60,
+  },
   obstacleEmoji: {
     fontSize: 20,
   },
@@ -52,19 +59,27 @@ export const gameStyles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: "#4CAF50",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
+    padding: 20,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 60,
     ...Platform.select({
       ios: {
+        elevation: 3,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
       },
       android: {
-        elevation: 5,
+        elevation: 3,
+      },
+      web: {
+        boxShadow: "0px 2px 3.84px rgba(0, 0, 0, 0.25)",
       },
     }),
   },
@@ -98,7 +113,7 @@ export const gameStyles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   instructions: {
@@ -162,10 +177,29 @@ mountainName: {
   },
   stopButton: {
     backgroundColor: "#dc3545",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
+    padding: 20,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 60,
+    ...Platform.select({
+      ios: {
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: "0px 2px 3.84px rgba(0, 0, 0, 0.25)",
+      },
+    }),
   },
   cancelButton: {
     backgroundColor: "#dc3545",
@@ -174,5 +208,28 @@ mountainName: {
     borderRadius: 10,
     alignItems: "center",
     marginTop: 15,
+  },
+  sideTreesContainer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 40,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    zIndex: 5,
+  },
+  sideTreesLeft: {
+    left: 0,
+  },
+  sideTreesRight: {
+    right: 0,
+  },
+  sideTree: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sideTreeEmoji: {
+    fontSize: 24,
   },
 });

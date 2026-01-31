@@ -1,9 +1,8 @@
 import React from "react";
-import { View, TouchableOpacity, Modal, StyleSheet, ScrollView } from "react-native";
-import { mountainArray, Mountain } from "../assets/mountains/mountainArray";
+import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Mountain, mountainArray } from "../assets/mountains/mountainArray";
 import { ThemedText } from "../components/themed-text";
 import { ThemedView } from "../components/themed-view";
-import { useThemeColor } from "../hooks/use-theme-color";
 import { useAppStore } from "../hooks/game-state";
 
 export default function MountainSelectModal({ 
@@ -15,13 +14,10 @@ export default function MountainSelectModal({
   onClose: () => void;
   onSelect: (mountain: Mountain) => void;
 }) {
-  const textColor = useThemeColor({}, "text");
-  const borderColor = useThemeColor({}, "icon");
-  const tintColor = useThemeColor({}, "tint");
 
-  const safeTextColor = textColor || "#11181C";
-  const safeBorderColor = borderColor || "#687076";
-  const safeTintColor = tintColor || "#0a7ea4";
+  const safeTextColor = "#11181C";
+  const safeBorderColor =  "#687076";
+  const safeTintColor = "#0a7ea4";
 
   const { currentMountain } = useAppStore();
 
@@ -66,7 +62,7 @@ export default function MountainSelectModal({
                         🌲 Trees: {mountain.trees}
                       </ThemedText>
                       <ThemedText style={styles.obstacleText}>
-                        ⛷️ Skiers: {mountain.jerries}
+                        🐢 Jerries: {mountain.jerries}
                       </ThemedText>
                     </View>
                     <View style={styles.obstacleRow}>
@@ -121,6 +117,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   modalTitle: {
+    color: '#000000',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
@@ -145,11 +142,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
+    textAlign: 'center'
   },
   mountainDesc: {
     fontSize: 14,
     opacity: 0.8,
     marginBottom: 8,
+    textAlign: 'center'
   },
   obstaclePreview: {
     marginTop: 10,
@@ -159,7 +158,7 @@ const styles = StyleSheet.create({
   },
   obstacleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     marginBottom: 4,
   },
   obstacleText: {

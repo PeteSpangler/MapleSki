@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { useRouter } from 'expo-router';
 import { ThemedText } from "../components/themed-text";
 import { ThemedView } from "../components/themed-view";
-import { useAppStore, HighScore, Views } from "../hooks/game-state";
+import { HighScore, useAppStore, Views } from "../hooks/game-state";
 import { useThemeColor } from "../hooks/use-theme-color";
 
 
 export default function DefeatScreen() {
+  const router = useRouter();
   const { 
     score, 
     highScores, 
@@ -24,14 +26,10 @@ export default function DefeatScreen() {
   const tintColor = useThemeColor({}, "tint");
 
   useEffect(() => {
-    // Load high scores on component mount
     loadHighScores();
   }, [loadHighScores]);
 
   useEffect(() => {
-    console.log('Defeat screen - Score:', score, 'HighScores:', highScores);
-    
-    // Check if current score qualifies for high scores
     const qualifies = highScores.length < 10 || score > highScores[highScores.length - 1]?.score;
     setIsHighScore(qualifies);
   }, [score, highScores]);
@@ -50,16 +48,22 @@ export default function DefeatScreen() {
     saveHighScore(username, score);
     Alert.alert("High Score Saved!", "Your score has been added to the leaderboard!");
     setUsername("");
+    
+    // Auto-return to main menu after saving
+    setTimeout(() => {
+      resetGame();
+      setCurrentView(Views.Menu);
+      router.replace('/');
+    }, 1500);
   };
 
   const handlePlayAgain = () => {
     resetGame();
     setCurrentView(Views.Menu);
+    router.replace('/');
   };
 
   const renderHighScores = () => {
-    console.log('High scores:', highScores, 'Length:', highScores.length);
-    
     if (highScores.length === 0) {
       return (
         <ThemedText style={styles.noScoresText}>
@@ -117,7 +121,7 @@ export default function DefeatScreen() {
               textAlign="center"
             />
             <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: tintColor }]}
+              style={[styles.saveButton, { backgroundColor: "#4CAF50" }]}
               onPress={handleSaveHighScore}
               disabled={username.length !== 3}
             >
@@ -137,7 +141,7 @@ export default function DefeatScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.playAgainButton, { backgroundColor: tintColor }]}
+            style={[styles.playAgainButton, { backgroundColor: "#dc3545" }]}
             onPress={handlePlayAgain}
           >
             <ThemedText style={styles.buttonText}>Main Menu</ThemedText>
@@ -168,6 +172,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 30,
+    color: "#ffffff",
   },
   currentScoreText: {
     textAlign: "center",
@@ -176,25 +181,21 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     color: "#4CAF50",
   },
-  currentScoreText: {
-    textAlign: "center",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 30,
-  },
   highScoreEntry: {
     alignItems: "center",
     marginBottom: 30,
     padding: 20,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#ccc",
+    borderColor: "#4CAF50",
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
   },
   highScoreTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 15,
     textAlign: "center",
+    color: "#ffffff",
   },
   usernameInput: {
     width: 120,
@@ -204,11 +205,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+    color: "#ffffff",
+    textAlign: "center",
   },
   saveButton: {
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
+    minWidth: 120,
   },
   buttonText: {
     color: "#ffffff",
@@ -223,6 +227,7 @@ const styles = StyleSheet.create({
   highScoresTitle: {
     textAlign: "center",
     marginBottom: 15,
+    color: "#ffffff",
   },
   scoresList: {
     flex: 1,
@@ -234,30 +239,35 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#444",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
   rankText: {
     fontSize: 18,
     fontWeight: "bold",
     width: 30,
+    color: "#ffffff",
   },
   usernameText: {
     fontSize: 18,
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
+    color: "#ffffff",
   },
   scoreListItemText: {
     fontSize: 18,
     fontWeight: "bold",
     width: 80,
     textAlign: "right",
+    color: "#ffffff",
   },
   noScoresText: {
     textAlign: "center",
     fontSize: 16,
     fontStyle: "italic",
     paddingVertical: 20,
+    color: "#ffffff",
   },
   buttonContainer: {
     alignItems: "center",
@@ -266,5 +276,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 15,
     borderRadius: 8,
+    minWidth: 150,
   },
 });

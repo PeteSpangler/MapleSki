@@ -53,6 +53,12 @@ export interface GameState {
   skierPosition: { x: number; y: number };
   obstacles: Obstacle[];
   gameSpeed: number;
+  dynamicObstacleLimits: {
+    trees: number;
+    jerries: number;
+    moguls: number;
+    bears: number;
+  };
   
   // Actions
   loadHighScores: () => Promise<void>;
@@ -80,6 +86,7 @@ export interface GameState {
   setGameSpeed: (update: number | ((prev: number) => number)) => void;
   addScore: (points: number) => void;
   endGame: () => void;
+  setDynamicObstacleLimits: (limits: { trees: number; jerries: number; moguls: number; bears: number }) => void;
   saveHighScore: (username: string, score: number) => Promise<void>;
   clearHighScores: () => Promise<void>;
 }
@@ -108,7 +115,13 @@ const getDefaultState = () => ({
   highScores: [] as HighScore[],
   skierPosition: { x: 0, y: 0 },
   obstacles: [] as Obstacle[],
-  gameSpeed: 2.5,
+  gameSpeed: 5,
+  dynamicObstacleLimits: {
+    trees: 0,
+    jerries: 0,
+    moguls: 0,
+    bears: 0,
+  },
 });
 
 export const useAppStore = create<GameState>()(
@@ -201,7 +214,13 @@ export const useAppStore = create<GameState>()(
         score: 0,
         skierPosition: { x: SCREEN_WIDTH / 2 - SKIER_SIZE / 2, y: SCREEN_HEIGHT * 0.5 },
         obstacles: [],
-        gameSpeed: 2.5,
+        gameSpeed: 5,
+        dynamicObstacleLimits: {
+          trees: get().currentMountain.trees,
+          jerries: get().currentMountain.jerries,
+          moguls: get().currentMountain.moguls,
+          bears: get().currentMountain.bears,
+        },
       })),
 
     stopGame: () =>
@@ -227,6 +246,9 @@ export const useAppStore = create<GameState>()(
 
     addScore: (points: number) =>
       set((state) => ({ score: state.score + points })),
+
+    setDynamicObstacleLimits: (limits: { trees: number; jerries: number; moguls: number; bears: number }) =>
+      set(() => ({ dynamicObstacleLimits: limits })),
 
     endGame: () =>
       set(() => ({

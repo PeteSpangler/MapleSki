@@ -14,7 +14,6 @@ export const checkCollision = (
   return distance < (SKIER_SIZE + OBSTACLE_SIZE) / 2;
 };
 
-// Game controls hook
 export const useGameControls = () => {
   const { skierPosition, updateSkierPosition, gameStarted } = useAppStore();
 
@@ -59,20 +58,16 @@ export const useObstacleSpawner = () => {
 
   const spawnObstacle = useCallback((): Obstacle | null => {
     try {
-      // Safety check for currentMountain
       if (!currentMountain) return null;
 
-      // Safety check for obstacles array
       if (!obstacles || !Array.isArray(obstacles)) return null;
 
-      // Count current obstacles by type
       const currentCounts = obstacles.reduce((acc, obstacle) => {
         if (!obstacle || !obstacle.type) return acc;
         acc[obstacle.type] = (acc[obstacle.type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
-      // Check which obstacle types can still be spawned
       const maxTrees = currentMountain.trees || 0;
       const maxJerries = currentMountain.jerries || 0;
       const maxMoguls = currentMountain.moguls || 0;
@@ -85,17 +80,15 @@ export const useObstacleSpawner = () => {
       if (currentCounts.mogul < maxMoguls) availableTypes.push('mogul');
       if (currentCounts.bear < maxBears) availableTypes.push('bear');
 
-      // If all obstacles are at maximum, don't spawn more
       if (availableTypes.length === 0) return null;
 
-      // Randomly select from available types
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
 
       return {
         id: Date.now() + Math.random(),
         type,
         x: Math.random() * (SCREEN_WIDTH - OBSTACLE_SIZE),
-        y: SCREEN_HEIGHT, // Start at bottom of screen
+        y: SCREEN_HEIGHT,
         passed: false,
       };
     } catch (error) {
@@ -105,15 +98,13 @@ export const useObstacleSpawner = () => {
   }, [currentMountain, obstacles]);
 
   const updateGame = useCallback(() => {
-    // Move obstacles up the screen and remove those that went off screen
     const updatedObstacles = obstacles
       .map((obstacle) => ({
         ...obstacle,
-        y: obstacle.y - gameSpeed * 2, // Move up
+        y: obstacle.y - gameSpeed * 2,
       }))
       .filter((obstacle) => obstacle.y > -OBSTACLE_SIZE);
 
-    // Check for collisions
     const collision = updatedObstacles.some((obstacle) =>
       checkCollision(skierPosition.x, skierPosition.y, obstacle)
     );
@@ -123,7 +114,6 @@ export const useObstacleSpawner = () => {
       return;
     }
 
-    // Check for dodged obstacles and add score
     const processedObstacles = updatedObstacles.map((obstacle) => {
       if (!obstacle.passed && obstacle.y < skierPosition.y - SKIER_SIZE) {
         addScore(10);
@@ -134,14 +124,12 @@ export const useObstacleSpawner = () => {
 
     updateObstacles(processedObstacles);
 
-    // Gradually increase game speed
-    setGameSpeed((prev: number) => Math.min(prev + 0.001, 3));
+    setGameSpeed((prev: number) => Math.min(prev + 0.1, 7.5));
   }, [obstacles, gameSpeed, skierPosition, updateObstacles, setGameSpeed, addScore, endGame]);
 
   return { spawnObstacle, updateGame };
 };
 
-// Mountain selection hook
 export const useMountainSelection = () => {
   const { setCurrentTree, setCurrentJerry, setCurrentMogul, setCurrentBear, 
           setNumberOfTrees, setNumberOfJerries, setNumberOfMoguls, setNumberOfBears } = useAppStore();

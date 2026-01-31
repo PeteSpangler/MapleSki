@@ -1,16 +1,20 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import { View, Text, TouchableOpacity, Alert, PanResponder } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { jerryEmoji, skierEmoji } from "../assets/jerries/jerryArray";
+import { ThemedText } from "../components/themed-text";
 import { useAppStore } from "../hooks/game-state";
 import { gameStyles } from "./styles";
-import { skierEmoji, jerryEmoji } from "../assets/jerries/jerryArray";
-import { SCREEN_WIDTH, SCREEN_HEIGHT, SKIER_SIZE, OBSTACLE_SIZE } from "./types";
+import { OBSTACLE_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH, SKIER_SIZE } from "./types";
 
 export default function GameScreen() {
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number>(0);
   const obstacleIdRef = useRef(0);
   const obstaclesPassedRef = useRef(0);
   const gameStartTimeRef = useRef<number>(0);
   const lastSpeedIncreaseRef = useRef<number>(0);
+  const lastObstacleSpawnRef = useRef<number>(0);
+  const lastLimitIncreaseRef = useRef<number>(0);
+  const [skierFacing, setSkierFacing] = useState<'left' | 'right'>('right');
   
   const { 
     gameStarted, 
@@ -23,6 +27,7 @@ export default function GameScreen() {
     currentJerry,
     currentMogul,
     currentBear,
+    dynamicObstacleLimits,
     startGame,
     stopGame,
     updateSkierPosition,
@@ -31,6 +36,7 @@ export default function GameScreen() {
     addScore,
     endGame,
     setGameSpeed,
+    setDynamicObstacleLimits,
     currentMountain
   } = useAppStore();
 
@@ -40,24 +46,26 @@ export default function GameScreen() {
       case 'jerry': return jerryEmoji;
       case 'mogul': return '⛰️';
       case 'bear': return '🐻';
+      case 'snowman': return '☃️';
       default: return '❓';
     }
   };
 
-  const generateObstacle = useCallback((): { id: number; type: 'tree' | 'jerry' | 'mogul' | 'bear'; x: number; y: number; passed: boolean } | null => {
-    const enabledObstacles: ('tree' | 'jerry' | 'mogul' | 'bear')[] = [];
+  const generateObstacle = useCallback((forceType?: 'tree' | 'jerry' | 'mogul' | 'bear' | 'snowman'): { id: number; type: 'tree' | 'jerry' | 'mogul' | 'bear' | 'snowman'; x: number; y: number; passed: boolean } | null => {
+    const enabledObstacles: ('tree' | 'jerry' | 'mogul' | 'bear' | 'snowman')[] = [];
     
     const maxObstacles = {
-      tree: currentMountain.trees,
-      jerry: currentMountain.jerries,
-      mogul: currentMountain.moguls,
-      bear: currentMountain.bears
+      tree: dynamicObstacleLimits.trees,
+      jerry: dynamicObstacleLimits.jerries,
+      mogul: dynamicObstacleLimits.moguls,
+      bear: dynamicObstacleLimits.bears,
+      snowman: 1 // Only one snowman allowed
     };
     
     const currentObstacleCounts = obstacles.reduce((acc, obstacle) => {
       acc[obstacle.type]++;
       return acc;
-    }, { tree: 0, jerry: 0, mogul: 0, bear: 0 });
+    }, { tree: 0, jerry: 0, mogul: 0, bear: 0, snowman: 0 });
     
     if (currentTree.index > 0 && currentObstacleCounts.tree < maxObstacles.tree) {
       enabledObstacles.push('tree');
@@ -72,9 +80,14 @@ export default function GameScreen() {
       enabledObstacles.push('bear');
     }
     
+    // Snowman is special - only available when score reaches 500
+    if (forceType === 'snowman' || (score >= 500 && currentObstacleCounts.snowman < maxObstacles.snowman)) {
+      enabledObstacles.push('snowman');
+    }
+    
     if (enabledObstacles.length === 0) return null;
     
-    const type = enabledObstacles[Math.floor(Math.random() * enabledObstacles.length)];
+    const type = forceType || enabledObstacles[Math.floor(Math.random() * enabledObstacles.length)];
     const x = Math.random() * (SCREEN_WIDTH - OBSTACLE_SIZE);
     
     return {
@@ -92,10 +105,12 @@ export default function GameScreen() {
     const skierTop = skierPos.y;
     const skierBottom = skierPos.y + SKIER_SIZE;
     
+    // Use larger collision box for snowman
+    const obstacleSize = obstacle.type === 'snowman' ? OBSTACLE_SIZE * 2 : OBSTACLE_SIZE;
     const obstacleLeft = obstacle.x;
-    const obstacleRight = obstacle.x + OBSTACLE_SIZE;
+    const obstacleRight = obstacle.x + obstacleSize;
     const obstacleTop = obstacle.y;
-    const obstacleBottom = obstacle.y + OBSTACLE_SIZE;
+    const obstacleBottom = obstacle.y + obstacleSize;
     
     return !(
       skierLeft > obstacleRight ||
@@ -111,51 +126,108 @@ export default function GameScreen() {
     // Check for time-based speed increase every 10 seconds
     const currentTime = Date.now();
     const timeElapsed = currentTime - gameStartTimeRef.current;
-    const timeSinceLastIncrease = currentTime - lastSpeedIncreaseRef.current;
+    const timeSinceLastSpeedIncrease = currentTime - lastSpeedIncreaseRef.current;
     
-    if (timeSinceLastIncrease >= 10000) { // 10 seconds = 10000ms
-      setGameSpeed((prev: number) => Math.min(prev * 1.1, 5)); // 10% increase
+    if (timeSinceLastSpeedIncrease >= 5000) {
+      setGameSpeed((prev: number) => Math.min(prev * 1.2, 25));
       lastSpeedIncreaseRef.current = currentTime;
     }
     
+    // Spawn 1 of each obstacle every 3 seconds (reduced from 10 seconds)
+    const timeSinceLastSpawn = currentTime - lastObstacleSpawnRef.current;
+    if (timeSinceLastSpawn >= 3000) {
+      const obstacleTypes: ('tree' | 'jerry' | 'mogul' | 'bear')[] = ['tree', 'jerry', 'mogul', 'bear'];
+      obstacleTypes.forEach(type => {
+        const obstacle = generateObstacle(type);
+        if (obstacle) {
+          addObstacle(obstacle);
+        }
+      });
+      lastObstacleSpawnRef.current = currentTime;
+    }
+    
+    // Increase obstacle limits every 5 seconds
+    const timeSinceLastLimitIncrease = currentTime - lastLimitIncreaseRef.current;
+    if (timeSinceLastLimitIncrease >= 5000) {
+      setDynamicObstacleLimits({
+        trees: Math.min(dynamicObstacleLimits.trees + 1, currentMountain.trees),
+        jerries: Math.min(dynamicObstacleLimits.jerries + 1, currentMountain.jerries),
+        moguls: Math.min(dynamicObstacleLimits.moguls + 1, currentMountain.moguls),
+        bears: Math.min(dynamicObstacleLimits.bears + 1, currentMountain.bears)
+      });
+      lastLimitIncreaseRef.current = currentTime;
+    }
+    
+    // Spawn abdominal snowman when score reaches 500
+    if (score >= 500) {
+      const snowmanExists = obstacles.some(obs => obs.type === 'snowman');
+      if (!snowmanExists) {
+        // Force-create snowman without going through generateObstacle to avoid mountain restrictions
+        const snowman = {
+          id: obstacleIdRef.current++,
+          type: 'snowman' as const,
+          x: skierPosition.x,
+          y: -OBSTACLE_SIZE * 2, // Start further up to be visible
+          passed: false
+        };
+        addObstacle(snowman);
+      }
+    }
+    
     updateObstacles(obstacles.map(obstacle => {
-      const newY = obstacle.y - gameSpeed;
+      let newY = obstacle.y - gameSpeed;
+      let newX = obstacle.x;
+      
+      // Snowman moves faster and chases the skier
+      if (obstacle.type === 'snowman') {
+        newY = obstacle.y - (gameSpeed * 1.5); // 50% faster than regular obstacles
+        // Mirror skier movements more aggressively
+        const dx = skierPosition.x - obstacle.x;
+        const chaseSpeed = 3; // Faster horizontal movement
+        newX = obstacle.x + Math.sign(dx) * Math.min(Math.abs(dx), chaseSpeed);
+      }
       
       if (newY < -OBSTACLE_SIZE) {
         if (!obstacle.passed) {
-          addScore(10);
+          const points = gameSpeed >= 25 ? 50 : gameSpeed >= 15 ? 25 : 10;
+          addScore(points);
           obstaclesPassedRef.current++;
           
-          // Keep obstacle-based speed increase as well
           if (obstaclesPassedRef.current % 10 === 0) {
-            setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
+            setGameSpeed((prev: number) => Math.min(prev + 0.2, 25));
           }
         }
         return null;
       }
       
-      const updatedObstacle = { ...obstacle, y: newY };
+      const updatedObstacle = { ...obstacle, y: newY, x: newX };
       
       if (!obstacle.passed && newY < skierPosition.y - SKIER_SIZE) {
         updatedObstacle.passed = true;
-        addScore(10);
+        const points = gameSpeed >= 25 ? 50 : gameSpeed >= 15 ? 25 : 10;
+        addScore(points);
         obstaclesPassedRef.current++;
         
-        // Keep obstacle-based speed increase as well
         if (obstaclesPassedRef.current % 10 === 0) {
-          setGameSpeed((prev: number) => Math.min(prev + 0.2, 5));
+          setGameSpeed((prev: number) => Math.min(prev + 0.2, 25));
         }
       }
       
       if (checkCollision(skierPosition, updatedObstacle)) {
-        endGame();
+        // If hit by snowman, special message
+        if (updatedObstacle.type === 'snowman') {
+          // Game ends immediately when caught by snowman
+          endGame();
+        } else {
+          endGame();
+        }
         return null;
       }
       
       return updatedObstacle;
     }).filter(Boolean));
     
-    if (Math.random() < 0.02) {
+    if (Math.random() < 0.08) { // Increased from 2% to 8% chance per frame
       const newObstacle = generateObstacle();
       if (newObstacle) {
         newObstacle.y = SCREEN_HEIGHT;
@@ -169,6 +241,8 @@ export default function GameScreen() {
       if (gameStartTimeRef.current === 0) {
         gameStartTimeRef.current = Date.now();
         lastSpeedIncreaseRef.current = Date.now();
+        lastObstacleSpawnRef.current = Date.now();
+        lastLimitIncreaseRef.current = Date.now();
       }
       
       const interval = setInterval(gameLoop, 16);
@@ -177,6 +251,8 @@ export default function GameScreen() {
     } else if (!gameStarted) {
       gameStartTimeRef.current = 0;
       lastSpeedIncreaseRef.current = 0;
+      lastObstacleSpawnRef.current = 0;
+      lastLimitIncreaseRef.current = 0;
     }
   }, [gameStarted, gameOver, gameLoop]);
 
@@ -193,8 +269,10 @@ export default function GameScreen() {
     
     if (locationX < centerX - 50) {
       newX = Math.max(0, skierPosition.x - step);
+      setSkierFacing('right');
     } else if (locationX > centerX + 50) {
       newX = Math.min(SCREEN_WIDTH - SKIER_SIZE, skierPosition.x + step);
+      setSkierFacing('left');
     }
     
     if (locationY < centerY - 50) {
@@ -238,7 +316,7 @@ export default function GameScreen() {
           style={[gameStyles.startButton, { alignSelf: 'center', marginTop: 30 }]}
           onPress={handleStartGame}
         >
-          <Text style={gameStyles.buttonText}>Play Again</Text>
+          <ThemedText style={gameStyles.buttonText}>Play Again</ThemedText>
         </TouchableOpacity>
       </View>
     );
@@ -258,16 +336,42 @@ export default function GameScreen() {
       >
         {gameStarted && (
           <>
+            {/* Left side trees */}
+            <View style={[gameStyles.sideTreesContainer, gameStyles.sideTreesLeft]}>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <View key={`left-tree-${i}`} style={gameStyles.sideTree}>
+                  <Text style={gameStyles.sideTreeEmoji}>🌲</Text>
+                </View>
+              ))}
+            </View>
+            
+            {/* Right side trees */}
+            <View style={[gameStyles.sideTreesContainer, gameStyles.sideTreesRight]}>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <View key={`right-tree-${i}`} style={gameStyles.sideTree}>
+                  <Text style={gameStyles.sideTreeEmoji}>🌲</Text>
+                </View>
+              ))}
+            </View>
+            
             <View style={[gameStyles.skier, { left: skierPosition.x, top: skierPosition.y }]}>
-              <Text style={gameStyles.skierEmoji}>{skierEmoji}</Text>
+              <Text style={[gameStyles.skierEmoji, { transform: [{ scaleX: skierFacing === 'left' ? -1 : 1 }] }]}>{skierEmoji}</Text>
             </View>
             
             {obstacles.map(obstacle => (
               <View 
                 key={obstacle.id} 
-                style={[gameStyles.obstacle, { left: obstacle.x, top: obstacle.y }]}
+                style={[
+                  obstacle.type === 'snowman' ? gameStyles.snowman : gameStyles.obstacle, 
+                  { left: obstacle.x, top: obstacle.y }
+                ]}
               >
-                <Text style={gameStyles.obstacleEmoji}>{getObstacleEmoji(obstacle.type)}</Text>
+                <Text style={[
+                  gameStyles.obstacleEmoji, 
+                  obstacle.type === 'snowman' && { fontSize: 40 } // Bigger emoji for snowman
+                ]}>
+                  {getObstacleEmoji(obstacle.type)}
+                </Text>
               </View>
             ))}
           </>
@@ -277,7 +381,7 @@ export default function GameScreen() {
       <View style={gameStyles.controls}>
         {!gameStarted ? (
           <TouchableOpacity style={gameStyles.startButton} onPress={handleStartGame}>
-            <Text style={gameStyles.buttonText}>Start Game</Text>
+            <ThemedText style={gameStyles.buttonText}>Start Game</ThemedText>
           </TouchableOpacity>
         ) : (
           <View style={gameStyles.instructions}>
@@ -287,7 +391,7 @@ export default function GameScreen() {
         
         {gameStarted && (
           <TouchableOpacity style={gameStyles.stopButton} onPress={handleStopGame}>
-            <Text style={gameStyles.buttonText}>Stop Game</Text>
+            <ThemedText style={gameStyles.buttonText}>Stop Game</ThemedText>
           </TouchableOpacity>
         )}
       </View>

@@ -7,7 +7,7 @@ export const OBSTACLE_SIZE = 30;
 
 export interface Obstacle {
   id: number;
-  type: 'tree' | 'jerry' | 'mogul' | 'bear';
+  type: 'tree' | 'jerry' | 'mogul' | 'bear' | 'snowman';
   x: number;
   y: number;
   passed: boolean;

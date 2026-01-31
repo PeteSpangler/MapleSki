@@ -1,4 +1,4 @@
-import Link from "expo-router/link";
+import { useRouter } from 'expo-router';
 import {
   Alert,
   BackHandler,
@@ -8,16 +8,17 @@ import {
   View,
 } from "react-native";
 
+import { useState } from "react";
+import { Mountain } from "../assets/mountains/mountainArray";
+import MountainSelectModal from "../components/mountain-select";
 import ParallaxScrollView from "../components/parallax-scroll-view";
 import { ThemedText } from "../components/themed-text";
 import { ThemedView } from "../components/themed-view";
-import { useThemeColor } from "../hooks/use-theme-color";
-import MountainSelectModal from "../components/mountain-select";
-import { useState } from "react";
 import { useAppStore } from "../hooks/game-state";
-import { Mountain } from "../assets/mountains/mountainArray";
+import { useThemeColor } from "../hooks/use-theme-color";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [showMountainSelect, setShowMountainSelect] = useState(false);
   const { setCurrentMountain, currentMountain } = useAppStore();
   const tintColor = useThemeColor({}, "tint");
@@ -53,17 +54,16 @@ export default function HomeScreen() {
           </ThemedView>
 
           <ThemedView style={styles.menuContainer}>
-            <Link href="/gameScreen" asChild>
-              <TouchableOpacity
-                style={[styles.menuButton, styles.startGameButton]}
+            <TouchableOpacity
+              style={[styles.menuButton, styles.startGameButton]}
+              onPress={() => router.push('/gameScreen')}
+            >
+              <ThemedText
+                style={[styles.menuButtonText, { color: "#ffffff" }]}
               >
-                <ThemedText
-                  style={[styles.menuButtonText, { color: "#ffffff" }]}
-                >
-                  Start Game
-                </ThemedText>
-              </TouchableOpacity>
-            </Link>
+                Start Game
+              </ThemedText>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.menuButton, { backgroundColor: "#6495ED" }]}
@@ -154,11 +154,6 @@ const styles = StyleSheet.create({
   },
   startGameButton: {
     backgroundColor: "#4CAF50",
-    marginBottom: 30,
-    minHeight: 70,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   headerImage: {
     height: 178,
