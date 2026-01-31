@@ -1,8 +1,6 @@
 import React from "react";
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Mountain, mountainArray } from "../assets/mountains/mountainArray";
-import { ThemedText } from "../components/themed-text";
-import { ThemedView } from "../components/themed-view";
 import { useAppStore } from "../hooks/game-state";
 
 export default function MountainSelectModal({ 
@@ -35,7 +33,7 @@ export default function MountainSelectModal({
     >
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { borderColor: safeBorderColor }]}>
-          <ThemedText style={styles.modalTitle}>Select Mountain</ThemedText>
+          <Text style={styles.modalTitle}>Select Mountain</Text>
           
           <ScrollView style={styles.mountainList} showsVerticalScrollIndicator={false}>
             {mountainArray.map((mountain) => (
@@ -52,35 +50,35 @@ export default function MountainSelectModal({
                 ]}
                 onPress={() => handleSelectMountain(mountain)}
               >
-                <ThemedView>
-                  <ThemedText style={styles.mountainName}>{mountain.name}</ThemedText>
-                  <ThemedText style={styles.mountainDesc}>{mountain.desc}</ThemedText>
+                <View>
+                  <Text style={styles.mountainName}>{mountain.name}</Text>
+                  <Text style={styles.mountainDesc}>{mountain.desc}</Text>
                   
                   <View style={styles.obstaclePreview}>
                     <View style={styles.obstacleRow}>
-                      <ThemedText style={styles.obstacleText}>
-                        🌲 Trees: {mountain.trees}
-                      </ThemedText>
-                      <ThemedText style={styles.obstacleText}>
-                        🐢 Jerries: {mountain.jerries}
-                      </ThemedText>
+                      <Text style={styles.obstacleText}>
+                        Trees: {mountain.trees}
+                      </Text>
+                      <Text style={styles.obstacleText}>
+                        Jerries: {mountain.jerries}
+                      </Text>
                     </View>
                     <View style={styles.obstacleRow}>
-                      <ThemedText style={styles.obstacleText}>
-                        ⛰️ Moguls: {mountain.moguls}
-                      </ThemedText>
-                      <ThemedText style={styles.obstacleText}>
-                        🐻 Bears: {mountain.bears}
-                      </ThemedText>
+                      <Text style={styles.obstacleText}>
+                        Moguls: {mountain.moguls}
+                      </Text>
+                      <Text style={styles.obstacleText}>
+                        Bears: {mountain.bears}
+                      </Text>
                     </View>
                   </View>
                   
                   {currentMountain.index === mountain.index && (
-                    <ThemedText style={[styles.selectedText, { color: safeTintColor }]}>
+                    <Text style={[styles.selectedText, { color: safeTintColor }]}>
                       Currently Selected
-                    </ThemedText>
+                    </Text>
                   )}
-                </ThemedView>
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -89,9 +87,9 @@ export default function MountainSelectModal({
             style={[styles.cancelButton, { backgroundColor: safeTextColor }]}
             onPress={onClose}
           >
-            <ThemedText style={[styles.buttonText, { color: "#ffffff" }]}>
+            <Text style={[styles.buttonText, { color: "#ffffff" }]}>
               Cancel
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

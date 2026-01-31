@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { jerryEmoji, skierEmoji } from "../assets/jerries/jerryArray";
-import { ThemedText } from "../components/themed-text";
 import { useAppStore } from "../hooks/game-state";
 import { gameStyles } from "./styles";
 import { OBSTACLE_SIZE, SCREEN_HEIGHT, SCREEN_WIDTH, SKIER_SIZE } from "./types";
+
+const SKIER_EMOJI = "⛷️";
+const JERRY_EMOJI = "🐢";
 
 export default function GameScreen() {
   const gameLoopRef = useRef<number>(0);
@@ -23,10 +24,6 @@ export default function GameScreen() {
     obstacles, 
     gameSpeed,
     gameOver,
-    currentTree,
-    currentJerry,
-    currentMogul,
-    currentBear,
     dynamicObstacleLimits,
     startGame,
     stopGame,
@@ -43,7 +40,7 @@ export default function GameScreen() {
   const getObstacleEmoji = (type: string) => {
     switch (type) {
       case 'tree': return '🌲';
-      case 'jerry': return jerryEmoji;
+      case 'jerry': return JERRY_EMOJI;
       case 'mogul': return '⛰️';
       case 'bear': return '🐻';
       case 'snowman': return '☃️';
@@ -59,7 +56,7 @@ export default function GameScreen() {
       jerry: dynamicObstacleLimits.jerries,
       mogul: dynamicObstacleLimits.moguls,
       bear: dynamicObstacleLimits.bears,
-      snowman: 1 // Only one snowman allowed
+      snowman: 1
     };
     
     const currentObstacleCounts = obstacles.reduce((acc, obstacle) => {
@@ -67,20 +64,19 @@ export default function GameScreen() {
       return acc;
     }, { tree: 0, jerry: 0, mogul: 0, bear: 0, snowman: 0 });
     
-    if (currentTree.index > 0 && currentObstacleCounts.tree < maxObstacles.tree) {
+    if (currentObstacleCounts.tree < maxObstacles.tree) {
       enabledObstacles.push('tree');
     }
-    if (currentJerry.index > 0 && currentObstacleCounts.jerry < maxObstacles.jerry) {
+    if (currentObstacleCounts.jerry < maxObstacles.jerry) {
       enabledObstacles.push('jerry');
     }
-    if (currentMogul.index > 0 && currentObstacleCounts.mogul < maxObstacles.mogul) {
+    if (currentObstacleCounts.mogul < maxObstacles.mogul) {
       enabledObstacles.push('mogul');
     }
-    if (currentBear.index > 0 && currentObstacleCounts.bear < maxObstacles.bear) {
+    if (currentObstacleCounts.bear < maxObstacles.bear) {
       enabledObstacles.push('bear');
     }
     
-    // Snowman is special - only available when score reaches 500
     if (forceType === 'snowman' || (score >= 500 && currentObstacleCounts.snowman < maxObstacles.snowman)) {
       enabledObstacles.push('snowman');
     }
@@ -97,7 +93,7 @@ export default function GameScreen() {
       y: SCREEN_HEIGHT,
       passed: false
     };
-  }, [currentTree, currentJerry, currentMogul, currentBear, currentMountain, obstacles]);
+  }, [dynamicObstacleLimits, currentMountain, obstacles, score]);
 
   const checkCollision = useCallback((skierPos: any, obstacle: any) => {
     const skierLeft = skierPos.x;
@@ -316,7 +312,7 @@ export default function GameScreen() {
           style={[gameStyles.startButton, { alignSelf: 'center', marginTop: 30 }]}
           onPress={handleStartGame}
         >
-          <ThemedText style={gameStyles.buttonText}>Play Again</ThemedText>
+          <Text style={gameStyles.buttonText}>Play Again</Text>
         </TouchableOpacity>
       </View>
     );
@@ -355,7 +351,7 @@ export default function GameScreen() {
             </View>
             
             <View style={[gameStyles.skier, { left: skierPosition.x, top: skierPosition.y }]}>
-              <Text style={[gameStyles.skierEmoji, { transform: [{ scaleX: skierFacing === 'left' ? -1 : 1 }] }]}>{skierEmoji}</Text>
+              <Text style={[gameStyles.skierEmoji, { transform: [{ scaleX: skierFacing === 'left' ? -1 : 1 }] }]}>{SKIER_EMOJI}</Text>
             </View>
             
             {obstacles.map(obstacle => (
@@ -381,7 +377,7 @@ export default function GameScreen() {
       <View style={gameStyles.controls}>
         {!gameStarted ? (
           <TouchableOpacity style={gameStyles.startButton} onPress={handleStartGame}>
-            <ThemedText style={gameStyles.buttonText}>Start Game</ThemedText>
+            <Text style={gameStyles.buttonText}>Start Game</Text>
           </TouchableOpacity>
         ) : (
           <View style={gameStyles.instructions}>
@@ -391,7 +387,7 @@ export default function GameScreen() {
         
         {gameStarted && (
           <TouchableOpacity style={gameStyles.stopButton} onPress={handleStopGame}>
-            <ThemedText style={gameStyles.buttonText}>Stop Game</ThemedText>
+            <Text style={gameStyles.buttonText}>Stop Game</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -4,6 +4,7 @@ import {
   BackHandler,
   Platform,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -11,17 +12,12 @@ import {
 import { useState } from "react";
 import { Mountain } from "../assets/mountains/mountainArray";
 import MountainSelectModal from "../components/mountain-select";
-import ParallaxScrollView from "../components/parallax-scroll-view";
-import { ThemedText } from "../components/themed-text";
-import { ThemedView } from "../components/themed-view";
 import { useAppStore } from "../hooks/game-state";
-import { useThemeColor } from "../hooks/use-theme-color";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [showMountainSelect, setShowMountainSelect] = useState(false);
   const { setCurrentMountain, currentMountain } = useAppStore();
-  const tintColor = useThemeColor({}, "tint");
 
   const handleExit = () => {
     Alert.alert("Exit Game", "Are you sure you want to exit MapleSki?", [
@@ -41,54 +37,41 @@ export default function HomeScreen() {
 
   return (
     <>
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-        headerImage={
-          <View style={styles.headerImage} />
-        }
-      >
-        <ThemedView style={styles.container}>
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">MapleSki</ThemedText>
-            <ThemedText style={styles.subtitle}>Hit the Slopes!</ThemedText>
-          </ThemedView>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>MapleSki</Text>
+          <Text style={styles.subtitle}>Hit the Slopes!</Text>
+        </View>
 
-          <ThemedView style={styles.menuContainer}>
-            <TouchableOpacity
-              style={[styles.menuButton, styles.startGameButton]}
-              onPress={() => router.push('/gameScreen')}
-            >
-              <ThemedText
-                style={[styles.menuButtonText, { color: "#ffffff" }]}
-              >
-                Start Game
-              </ThemedText>
-            </TouchableOpacity>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={[styles.menuButton, styles.startGameButton]}
+            onPress={() => router.push('/gameScreen')}
+          >
+            <Text style={[styles.menuButtonText, { color: "#ffffff" }]}>
+              Start Game
+            </Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.menuButton, { backgroundColor: "#6495ED" }]}
-              onPress={() => setShowMountainSelect(true)}
-            >
-              <ThemedText
-                style={[styles.menuButtonText, { color: "#ffffff" }]}
-              >
-                Mountain: {currentMountain.name}
-              </ThemedText>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.menuButton, { backgroundColor: "#6495ED" }]}
+            onPress={() => setShowMountainSelect(true)}
+          >
+            <Text style={[styles.menuButtonText, { color: "#ffffff" }]}>
+              Mountain: {currentMountain.name}
+            </Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.menuButton, styles.exitButton]}
-              onPress={handleExit}
-            >
-              <ThemedText
-                style={[styles.menuButtonText, { color: "#ffffff" }]}
-              >
-                Exit
-              </ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        </ThemedView>
-      </ParallaxScrollView>
+          <TouchableOpacity
+            style={[styles.menuButton, styles.exitButton]}
+            onPress={handleExit}
+          >
+            <Text style={[styles.menuButtonText, { color: "#ffffff" }]}>
+              Exit
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       
       <MountainSelectModal
         visible={showMountainSelect}
@@ -105,15 +88,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+    backgroundColor: "#87CEEB",
   },
   titleContainer: {
     alignItems: "center",
     marginBottom: 50,
   },
+  title: {
+    fontSize: 48,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+  },
   subtitle: {
     fontSize: 18,
     marginTop: 10,
     textAlign: "center",
+    color: "#ffffff",
   },
   menuContainer: {
     width: "100%",
@@ -154,12 +145,5 @@ const styles = StyleSheet.create({
   },
   startGameButton: {
     backgroundColor: "#4CAF50",
-  },
-  headerImage: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
   },
 });

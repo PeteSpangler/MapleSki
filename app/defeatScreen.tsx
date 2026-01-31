@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from 'expo-router';
-import { ThemedText } from "../components/themed-text";
-import { ThemedView } from "../components/themed-view";
 import { HighScore, useAppStore, Views } from "../hooks/game-state";
-import { useThemeColor } from "../hooks/use-theme-color";
 
 
 export default function DefeatScreen() {
@@ -20,10 +17,6 @@ export default function DefeatScreen() {
 
   const [username, setUsername] = useState("");
   const [isHighScore, setIsHighScore] = useState(false);
-
-  const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
-  const tintColor = useThemeColor({}, "tint");
 
   useEffect(() => {
     loadHighScores();
@@ -66,50 +59,50 @@ export default function DefeatScreen() {
   const renderHighScores = () => {
     if (highScores.length === 0) {
       return (
-        <ThemedText style={styles.noScoresText}>
+        <Text style={styles.noScoresText}>
           No high scores yet. Be the first!
-        </ThemedText>
+        </Text>
       );
     }
 
     return highScores.map((highScore: HighScore, index: number) => (
       <View key={`${highScore.username}-${highScore.date}`} style={styles.scoreRow}>
-        <ThemedText style={[styles.rankText, { color: textColor }]}>
+        <Text style={[styles.rankText, { color: "#ffffff" }]}>
           {index + 1}.
-        </ThemedText>
-        <ThemedText style={[styles.usernameText, { color: textColor }]}>
+        </Text>
+        <Text style={[styles.usernameText, { color: "#ffffff" }]}>
           {highScore.username}
-        </ThemedText>
-        <ThemedText style={[styles.scoreListItemText, { color: textColor }]}>
+        </Text>
+        <Text style={[styles.scoreListItemText, { color: "#ffffff" }]}>
           {highScore.score}
-        </ThemedText>
+        </Text>
       </View>
     ));
   };
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: "#1a1a2e" }]}>
       <View style={styles.content}>
-        <ThemedText type="title" style={styles.title}>
+        <Text style={styles.title}>
           Game Over!
-        </ThemedText>
+        </Text>
         
-        <ThemedText style={[styles.currentScoreText, { color: tintColor }]}>
+        <Text style={[styles.currentScoreText, { color: "#4CAF50" }]}>
           Your Score: {score}
-        </ThemedText>
+        </Text>
 
         {isHighScore && (
           <View style={styles.highScoreEntry}>
-            <ThemedText style={styles.highScoreTitle}>
+            <Text style={styles.highScoreTitle}>
               High Score! Enter Your Name:
-            </ThemedText>
+            </Text>
             <TextInput
               style={[
                 styles.usernameInput,
                 { 
-                  borderColor: tintColor,
-                  color: textColor,
-                  backgroundColor: backgroundColor,
+                  borderColor: "#4CAF50",
+                  color: "#ffffff",
+                  backgroundColor: "#1a1a2e",
                 }
               ]}
               value={username}
@@ -125,15 +118,15 @@ export default function DefeatScreen() {
               onPress={handleSaveHighScore}
               disabled={username.length !== 3}
             >
-              <ThemedText style={styles.buttonText}>Save Score</ThemedText>
+              <Text style={styles.buttonText}>Save Score</Text>
             </TouchableOpacity>
           </View>
         )}
 
         <View style={styles.highScoresContainer}>
-          <ThemedText type="subtitle" style={styles.highScoresTitle}>
+          <Text style={styles.highScoresTitle}>
             Top 10 High Scores
-          </ThemedText>
+          </Text>
           <ScrollView style={styles.scoresList}>
             {renderHighScores()}
           </ScrollView>
@@ -144,11 +137,11 @@ export default function DefeatScreen() {
             style={[styles.playAgainButton, { backgroundColor: "#dc3545" }]}
             onPress={handlePlayAgain}
           >
-            <ThemedText style={styles.buttonText}>Main Menu</ThemedText>
+            <Text style={styles.buttonText}>Main Menu</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
